@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ interface StateProps {
 
 export function State({ state }: StateProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
   const stateRef = useRef<SVGGElement>(null);
 
@@ -21,7 +22,6 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'transition') {
-      e.preventDefault();
       dispatch({ type: 'SELECT_STATE', payload: state.id });
       return;
     }
@@ -38,14 +38,12 @@ export function State({ state }: StateProps) {
       point.y = e.clientY;
       const svgPoint = point.matrixTransform(ctm.inverse());
 
-      const offsetX = svgPoint.x - state.position.x;
-      const offsetY = svgPoint.y - state.position.y;
-
-      // ドラッグ開始時に選択状態を設定
-      dispatch({ type: 'SELECT_STATE', payload: state.id });
+      setDragOffset({
+        x: svgPoint.x - state.position.x,
+        y: svgPoint.y - state.position.y
+      });
 
       const handleMove = (moveEvent: MouseEvent) => {
-        moveEvent.preventDefault();  // デフォルトのドラッグ動作を防止
         const movePoint = svg.createSVGPoint();
         movePoint.x = moveEvent.clientX;
         movePoint.y = moveEvent.clientY;
@@ -56,25 +54,18 @@ export function State({ state }: StateProps) {
           payload: {
             ...state,
             position: {
-              x: moveSvgPoint.x - offsetX,
-              y: moveSvgPoint.y - offsetY
+              x: moveSvgPoint.x - dragOffset.x,
+              y: moveSvgPoint.y - dragOffset.y
             }
           }
         });
       };
 
-      const handleUp = (upEvent: MouseEvent) => {
-        upEvent.preventDefault();  // デフォルトの動作を防止
-        
-        // イベントリスナーを確実に解除
+      const handleUp = () => {
         window.removeEventListener('mousemove', handleMove);
         window.removeEventListener('mouseup', handleUp);
-        
-        // ドラッグ終了時に選択状態をクリア
-        dispatch({ type: 'SELECT_STATE', payload: null });
       };
 
-      // イベントリスナーを追加
       window.addEventListener('mousemove', handleMove);
       window.addEventListener('mouseup', handleUp);
     }
