@@ -24,15 +24,18 @@ export function State({ state }: StateProps) {
       const svg = (e.target as SVGElement).ownerSVGElement;
       if (!svg) return;
 
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+
       const point = svg.createSVGPoint();
       point.x = e.clientX;
       point.y = e.clientY;
-      const transformedPoint = point.matrixTransform(svg.getScreenCTM()?.inverse());
       
       setDragOffset({
-        x: transformedPoint.x - state.position.x,
-        y: transformedPoint.y - state.position.y
+        x: (point.x - ctm.e) / ctm.a - state.position.x,
+        y: (point.y - ctm.f) / ctm.d - state.position.y
       });
+      
       dispatch({ type: 'SELECT_STATE', payload: state.id });
     } else if (mode === 'transition') {
       dispatch({ type: 'SELECT_STATE', payload: state.id });
@@ -45,18 +48,20 @@ export function State({ state }: StateProps) {
     const svg = document.querySelector('svg');
     if (!svg) return;
 
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+
     const point = svg.createSVGPoint();
     point.x = e.clientX;
     point.y = e.clientY;
-    const transformedPoint = point.matrixTransform(svg.getScreenCTM()?.inverse());
 
     dispatch({
       type: 'UPDATE_STATE',
       payload: {
         ...state,
         position: {
-          x: transformedPoint.x - dragOffset.x,
-          y: transformedPoint.y - dragOffset.y
+          x: (point.x - ctm.e) / ctm.a - dragOffset.x,
+          y: (point.y - ctm.f) / ctm.d - dragOffset.y
         }
       }
     });
@@ -106,7 +111,7 @@ export function State({ state }: StateProps) {
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [selectedStateId, state.id, mode, handleMouseMove, handleMouseUp]);
+  }, [selectedStateId, state.id, mode]);
 
   return (
     <g

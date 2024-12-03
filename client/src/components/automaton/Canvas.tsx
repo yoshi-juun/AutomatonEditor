@@ -2,27 +2,33 @@ import { useRef, useEffect } from 'react';
 import { State } from './State';
 import { Transition } from './Transition';
 import { useAutomatonStore } from '../../lib/automatonStore';
-import { Point } from '../../lib/automatonTypes';
 
 export function Canvas() {
   const svgRef = useRef<SVGSVGElement>(null);
   const { automaton, mode, dispatch } = useAutomatonStore();
 
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (mode !== 'state') return;
-
     const svg = svgRef.current;
     if (!svg) return;
 
-    const point = svg.createSVGPoint();
-    point.x = e.clientX;
-    point.y = e.clientY;
-    
-    const position = point.matrixTransform(svg.getScreenCTM()?.inverse());
-    dispatch({
-      type: 'ADD_STATE',
-      payload: { x: position.x, y: position.y }
-    });
+    if (mode === 'state') {
+      const point = svg.createSVGPoint();
+      point.x = e.clientX;
+      point.y = e.clientY;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      
+      dispatch({
+        type: 'ADD_STATE',
+        payload: {
+          x: (point.x - ctm.e) / ctm.a,
+          y: (point.y - ctm.f) / ctm.d
+        }
+      });
+    } else if (mode === 'transition') {
+      // キャンバスクリック時は選択解除
+      dispatch({ type: 'SELECT_STATE', payload: null });
+    }
   };
 
   useEffect(() => {
