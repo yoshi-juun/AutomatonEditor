@@ -13,7 +13,6 @@ export function State({ state }: StateProps) {
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // イベントの伝播を停止
     e.stopPropagation();
     
     if (mode === 'delete') {
@@ -21,7 +20,6 @@ export function State({ state }: StateProps) {
       return;
     }
 
-    // ドラッグモード時のみ処理
     if (mode === 'drag') {
       const rect = e.currentTarget.getBoundingClientRect();
       setDragOffset({
@@ -29,11 +27,13 @@ export function State({ state }: StateProps) {
         y: e.clientY - rect.top
       });
       dispatch({ type: 'SELECT_STATE', payload: state.id });
+    } else if (mode === 'transition') {
+      dispatch({ type: 'SELECT_STATE', payload: state.id });
     }
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (selectedStateId !== state.id) return;
+    if (selectedStateId !== state.id || mode !== 'drag') return;
 
     dispatch({
       type: 'UPDATE_STATE',
@@ -48,7 +48,9 @@ export function State({ state }: StateProps) {
   };
 
   const handleMouseUp = () => {
-    if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
+    if (selectedStateId === state.id) {
+      dispatch({ type: 'SELECT_STATE', payload: null });
+    } else if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
       dispatch({
         type: 'ADD_TRANSITION',
         payload: {
@@ -57,6 +59,7 @@ export function State({ state }: StateProps) {
           input: '0'
         }
       });
+      dispatch({ type: 'SELECT_STATE', payload: null });
     }
   };
 
@@ -77,16 +80,18 @@ export function State({ state }: StateProps) {
   };
 
   useEffect(() => {
-    if (selectedStateId === state.id) {
+    if (selectedStateId === state.id && mode === 'drag') {
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mouseup', () => {
+        dispatch({ type: 'SELECT_STATE', payload: null });
+      });
 
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [selectedStateId, state.id]);
+  }, [selectedStateId, state.id, mode]);
 
   return (
     <g
