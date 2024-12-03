@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAutomatonStore } from "../../lib/automatonStore";
 import { 
   Circle,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 
 export function Controls() {
-  const { mode, dispatch } = useAutomatonStore();
+  const { mode, isNFA, dispatch } = useAutomatonStore();
 
   return (
     <div className="space-y-6">
@@ -66,20 +67,46 @@ export function Controls() {
         </RadioGroup>
       </div>
 
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Actions</h2>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              // Reset to initial state
-              window.location.reload();
-            }}
-            className="w-full"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
-          </Button>
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">オートマトンタイプ</h2>
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="nfa-mode"
+              checked={isNFA}
+              onCheckedChange={(checked) => 
+                dispatch({ type: 'SET_NFA_MODE', payload: checked })
+              }
+            />
+            <Label htmlFor="nfa-mode">NFA モード {isNFA ? 'ON' : 'OFF'}</Label>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">アクション</h2>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Reset to initial state
+                window.location.reload();
+              }}
+              className="w-full"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              リセット
+            </Button>
+            {isNFA && (
+              <Button
+                variant="outline"
+                onClick={() => dispatch({ type: 'CONVERT_TO_DFA' })}
+                className="w-full"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                DFAに変換
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

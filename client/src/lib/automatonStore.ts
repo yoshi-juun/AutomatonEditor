@@ -17,7 +17,8 @@ const initialState: AutomatonState = {
     currentStates: new Set<string>(),
     step: 0,
     isRunning: false
-  }
+  },
+  isNFA: false
 };
 
 export const useAutomatonStore = create<
@@ -186,6 +187,111 @@ export const useAutomatonStore = create<
           ...state,
           simulation: { ...initialState.simulation }
         }));
+        break;
+
+      case 'SET_NFA_MODE':
+        set((state: AutomatonState) => ({
+          ...state,
+          isNFA: action.payload,
+          automaton: {
+            ...state.automaton,
+            type: action.payload ? 'NFA' : 'DFA'
+          }
+        }));
+        break;
+
+      case 'CONVERT_TO_DFA':
+        set((state: AutomatonState) => {
+          if (!state.isNFA) return state;
+
+          // NFAからDFAへの変換ロジック
+          const nfa = state.automaton;
+          const newStates: State[] = [];
+          const newTransitions: Transition[] = [];
+          const processedStates = new Set<string>();
+          const stateQueue: Set<string>[] = [];
+
+          // 初期状態から開始
+          const initialState = nfa.states.find(s => s.isInitial);
+          if (!initialState) return state;
+
+          stateQueue.push(new Set([initialState.id]));
+          let stateCounter = 0;
+
+          while (stateQueue.length > 0) {
+            const currentStateSet = stateQueue.shift()!;
+            const currentStateIds = Array.from(currentStateSet).sort().join(',');
+
+            if (processedStates.has(currentStateIds)) continue;
+            processedStates.add(currentStateIds);
+
+            // 新しい状態を作成
+            const newState: State = {
+              id: `dfa_${stateCounter}`,
+              name: `q${stateCounter}`,
+              position: {
+                x: 100 + (stateCounter % 3) * 150,
+                y: 100 + Math.floor(stateCounter / 3) * 150
+              },
+              isInitial: stateCounter === 0,
+              isAccepting: Array.from(currentStateSet).some(
+                id => nfa.states.find(s => s.id === id)?.isAccepting
+              )
+            };
+            newStates.push(newState);
+
+            // 各入力文字に対する遷移を計算
+            for (const input of nfa.alphabet) {
+              const nextStates = new Set<string>();
+              
+              // 現在の状態セットの各状態から、入力に対する遷移先を収集
+              currentStateSet.forEach(stateId => {
+                nfa.transitions
+                  .filter(t => t.from === stateId && t.input === input)
+                  .forEach(t => nextStates.add(t.to));
+              });
+
+              if (nextStates.size > 0) {
+                const nextStateIds = Array.from(nextStates).sort().join(',');
+                let targetStateId: string;
+
+                // 既存の状態セットを探す
+                const existingStateIndex = Array.from(processedStates).findIndex(
+                  ids => ids === nextStateIds
+                );
+
+                if (existingStateIndex === -1) {
+                  // 新しい状態セットを追加
+                  stateQueue.push(nextStates);
+                  targetStateId = `dfa_${stateCounter + stateQueue.length}`;
+                } else {
+                  targetStateId = `dfa_${existingStateIndex}`;
+                }
+
+                // 新しい遷移を追加
+                newTransitions.push({
+                  id: generateId(),
+                  from: newState.id,
+                  to: targetStateId,
+                  input
+                });
+              }
+            }
+
+            stateCounter++;
+          }
+
+          return {
+            ...state,
+            isNFA: false,
+            automaton: {
+              ...state.automaton,
+              type: 'DFA',
+              states: newStates,
+              transitions: newTransitions
+            }
+          };
+        });
         break;
     }
   }

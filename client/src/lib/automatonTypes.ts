@@ -37,6 +37,7 @@ export interface AutomatonState {
     step: number;
     isRunning: boolean;
   };
+  isNFA: boolean;
 }
 
 export type AutomatonAction =
@@ -51,4 +52,6 @@ export type AutomatonAction =
   | { type: 'SELECT_TRANSITION'; payload: string | null }
   | { type: 'START_SIMULATION'; payload: string }
   | { type: 'STEP_SIMULATION' }
-  | { type: 'STOP_SIMULATION' };
+  | { type: 'STOP_SIMULATION' }
+  | { type: 'SET_NFA_MODE'; payload: boolean }
+  | { type: 'CONVERT_TO_DFA' };
