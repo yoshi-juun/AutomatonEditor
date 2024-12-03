@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,15 @@ export function State({ state }: StateProps) {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-
+    
     if (mode === 'delete') {
       dispatch({ type: 'DELETE_STATE', payload: state.id });
+      return;
+    }
+
+    if (mode === 'transition') {
+      e.preventDefault(); // イベントのデフォルト動作を防止
+      dispatch({ type: 'SELECT_STATE', payload: state.id });
       return;
     }
 
@@ -47,48 +53,34 @@ export function State({ state }: StateProps) {
             ...state,
             position: {
               x: moveSvgPoint.x - offsetX,
-              y: moveSvgPoint.y - offsetY,
-            },
-          },
+              y: moveSvgPoint.y - offsetY
+            }
+          }
         });
       };
 
       const handleUp = () => {
-        // 必ずイベントリスナーを解除
         window.removeEventListener('mousemove', handleMove);
         window.removeEventListener('mouseup', handleUp);
-
-        // 状態の選択を解除
-        dispatch({ type: 'SELECT_STATE', payload: null });
       };
 
-      // イベントリスナーを登録
       window.addEventListener('mousemove', handleMove);
       window.addEventListener('mouseup', handleUp);
-
-      // 状態を選択
-      dispatch({ type: 'SELECT_STATE', payload: state.id });
     }
   };
-
-
 
   const handleMouseUp = (e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
-      const input = prompt('遷移の入力記号を入力してください:', '');
-      if (input !== null) {  // キャンセルされた場合を除外
-        dispatch({
-          type: 'ADD_TRANSITION',
-          payload: {
-            from: selectedStateId,
-            to: state.id,
-            input: input
-          }
-        });
-      }
-      dispatch({ type: 'SELECT_STATE', payload: null });
+      dispatch({
+        type: 'ADD_TRANSITION',
+        payload: {
+          from: selectedStateId,
+          to: state.id,
+          input: '0'
+        }
+      });
     }
   };
 
