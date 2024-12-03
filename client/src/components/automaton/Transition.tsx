@@ -18,6 +18,9 @@ interface TransitionProps {
 }
 
 export function Transition({ transition, fromState, toState }: TransitionProps) {
+  // 必要な状態が存在しない場合は何も描画しない
+  if (!fromState || !toState) return null;
+
   const [isEditing, setIsEditing] = useState(false);
   const pathRef = useRef<SVGPathElement>(null);
   const { mode, selectedTransitionId, automaton, dispatch } = useAutomatonStore();

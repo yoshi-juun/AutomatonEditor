@@ -7,6 +7,8 @@ export const calculateTransitionPath = (
   to: State,
   controlPoint?: Point
 ): string => {
+  if (!from || !to) return '';  // 無効な状態の場合は空のパスを返す
+
   if (from.id === to.id) {
     // Self-loop
     const r = 20;

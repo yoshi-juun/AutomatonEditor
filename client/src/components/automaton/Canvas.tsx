@@ -85,14 +85,23 @@ export function Canvas() {
         </marker>
       </defs>
       
-      {automaton.transitions.map(transition => (
-        <Transition
-          key={transition.id}
-          transition={transition}
-          fromState={automaton.states.find(s => s.id === transition.from)!}
-          toState={automaton.states.find(s => s.id === transition.to)!}
-        />
-      ))}
+      {automaton.transitions.map(transition => {
+        const fromState = automaton.states.find(s => s.id === transition.from);
+        const toState = automaton.states.find(s => s.id === transition.to);
+        
+        // 必要な状態が存在する場合のみ遷移を描画
+        if (fromState && toState) {
+          return (
+            <Transition
+              key={transition.id}
+              transition={transition}
+              fromState={fromState}
+              toState={toState}
+            />
+          );
+        }
+        return null;
+      })}
       
       {automaton.states.map(state => (
         <State key={state.id} state={state} />
