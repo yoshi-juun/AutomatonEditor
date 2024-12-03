@@ -80,6 +80,7 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
         y={midpoint.y - 12}
         width="30"
         height="24"
+        style={{ zIndex: 1000 }}
       >
         {isEditing ? (
           <Input
@@ -90,9 +91,13 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
             autoFocus
             className="w-8 h-6 text-center bg-background border border-input px-1"
             onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 1001 }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm font-medium">
+          <div 
+            className="w-full h-full flex items-center justify-center text-sm font-medium"
+            onDoubleClick={handleDoubleClick}
+          >
             {transition.input}
           </div>
         )}

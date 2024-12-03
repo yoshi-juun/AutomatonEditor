@@ -73,14 +73,18 @@ export function State({ state }: StateProps) {
     e.stopPropagation();
     
     if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
-      dispatch({
-        type: 'ADD_TRANSITION',
-        payload: {
-          from: selectedStateId,
-          to: state.id,
-          input: '0'
-        }
-      });
+      const input = prompt('遷移の入力記号を入力してください:', '');
+      if (input !== null) {  // キャンセルされた場合を除外
+        dispatch({
+          type: 'ADD_TRANSITION',
+          payload: {
+            from: selectedStateId,
+            to: state.id,
+            input: input
+          }
+        });
+      }
+      dispatch({ type: 'SELECT_STATE', payload: null });
     }
   };
 
