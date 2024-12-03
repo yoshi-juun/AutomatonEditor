@@ -100,6 +100,14 @@ export function State({ state }: StateProps) {
     setIsEditing(false);
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dispatch({
+      type: 'UPDATE_STATE',
+      payload: { ...state, isAccepting: !state.isAccepting }
+    });
+  };
+
   return (
     <g
       ref={stateRef}
@@ -107,6 +115,7 @@ export function State({ state }: StateProps) {
       onClick={handleClick}
       onMouseDown={handleDragStart}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       className="cursor-move"
     >
       {state.isInitial && (

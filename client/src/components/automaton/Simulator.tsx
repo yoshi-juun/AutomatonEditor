@@ -52,6 +52,12 @@ export function Simulator() {
   };
 
   const isAccepting = () => {
+    const hasAcceptingState = automaton.states.some(s => s.isAccepting);
+    if (!hasAcceptingState) {
+      setError('受理状態が設定されていません。状態を右クリックして受理状態を設定してください。');
+      return false;
+    }
+    
     return Array.from(simulation.currentStates).some(stateId => 
       automaton.states.find(s => s.id === stateId)?.isAccepting
     );
