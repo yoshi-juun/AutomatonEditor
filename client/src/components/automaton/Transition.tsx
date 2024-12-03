@@ -3,12 +3,6 @@ import { useAutomatonStore } from '../../lib/automatonStore';
 import { Transition as TransitionType, State } from '../../lib/automatonTypes';
 import { calculateTransitionPath, calculateArrowHead, isPointNearPath } from '../../lib/automatonUtils';
 import { Input } from '@/components/ui/input';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 interface TransitionProps {
@@ -18,18 +12,9 @@ interface TransitionProps {
 }
 
 export function Transition({ transition, fromState, toState }: TransitionProps) {
-  // 必要な状態が存在しない場合は何も描画しない
-  if (!fromState || !toState) return null;
-
   const [isEditing, setIsEditing] = useState(false);
   const pathRef = useRef<SVGPathElement>(null);
-  const store = useAutomatonStore();
-  const { mode, selectedTransitionId, automaton, dispatch } = store;
-  
-  if (!automaton || !dispatch) {
-    console.error('Store not properly initialized');
-    return null;
-  }
+  const { mode, selectedTransitionId, dispatch } = useAutomatonStore();
 
   const path = calculateTransitionPath(fromState, toState, transition.controlPoint);
   const arrowPath = calculateArrowHead(
@@ -50,11 +35,6 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
     }
   };
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(true);
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({
       type: 'UPDATE_TRANSITION',
@@ -66,10 +46,20 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
     setIsEditing(false);
   };
 
-  // Calculate label position
-  const midpoint = pathRef.current?.getPointAtLength(
-    (pathRef.current?.getTotalLength() || 0) / 2
-  ) || { x: 0, y: 0 };
+  // Calculate label position with offset
+  const midpoint = (() => {
+    if (!pathRef.current) return { x: 0, y: 0 };
+    
+    const pathLength = pathRef.current.getTotalLength();
+    const point = pathRef.current.getPointAtLength(pathLength / 2);
+    
+    // 表示位置を線の中央上部に調整
+    const offset = 20;  // 上方向へのオフセット
+    return {
+      x: point.x,
+      y: point.y - offset
+    };
+  })();
 
   return (
     <g>
@@ -85,69 +75,41 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
         `}
         markerEnd="url(#arrowhead)"
         onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
+        onDoubleClick={() => setIsEditing(true)}
       />
 
-      {/* Transition label */}
-      <foreignObject
-        x={midpoint.x - 20}
-        y={midpoint.y - 12}
-        width="40"
-        height="24"
-      >
-        <div className="relative flex items-center justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="secondary"
-                className="h-6 min-w-[2rem] px-2 text-sm font-medium bg-background border border-border shadow-sm hover:bg-accent"
-              >
-                {transition.input}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-24">
-              {Array.from(automaton.alphabet).map((input) => (
-                <DropdownMenuItem
-                  key={input}
-                  onClick={() => {
-                    dispatch({
-                      type: 'UPDATE_TRANSITION',
-                      payload: { ...transition, input }
-                    });
-                  }}
-                >
-                  {input}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuItem
-                onSelect={() => {
-                  setIsEditing(true);
-                }}
-                className="justify-center font-medium"
-              >
-                新規入力
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {isEditing && (
-            <div 
-              className="fixed inset-0 flex items-center justify-center bg-background/80"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="bg-card p-4 rounded-lg shadow-lg">
-                <Input
-                  type="text"
-                  value={transition.input}
-                  onChange={handleInputChange}
-                  onBlur={handleInputBlur}
-                  autoFocus
-                  className="w-24 text-center"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </foreignObject>
+      {isEditing ? (
+        <foreignObject
+          x={midpoint.x - 20}
+          y={midpoint.y - 12}
+          width="40"
+          height="24"
+        >
+          <Input
+            type="text"
+            value={transition.input}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            autoFocus
+            className="w-24 text-center"
+          />
+        </foreignObject>
+      ) : (
+        <foreignObject
+          x={midpoint.x - 20}
+          y={midpoint.y - 12}
+          width="40"
+          height="24"
+        >
+          <Button 
+            variant="secondary"
+            className="h-6 min-w-[2rem] px-2 text-sm font-medium bg-background border border-border shadow-sm hover:bg-accent"
+            onClick={() => setIsEditing(true)}
+          >
+            {transition.input}
+          </Button>
+        </foreignObject>
+      )}
     </g>
   );
 }
