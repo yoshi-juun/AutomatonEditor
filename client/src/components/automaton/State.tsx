@@ -33,6 +33,7 @@ export function State({ state }: StateProps) {
       const ctm = svg.getScreenCTM();
       if (!ctm) return;
 
+      // マウスの初期位置を記録
       const point = svg.createSVGPoint();
       point.x = e.clientX;
       point.y = e.clientY;
@@ -65,7 +66,7 @@ export function State({ state }: StateProps) {
       };
 
       window.addEventListener('mousemove', handleMove);
-      window.addEventListener('mouseup', handleUp);
+      window.addEventListener('mouseup', handleUp, { once: true }); // onceオプションを追加
     }
   };
 
