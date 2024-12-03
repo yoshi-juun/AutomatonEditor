@@ -23,7 +23,13 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
 
   const [isEditing, setIsEditing] = useState(false);
   const pathRef = useRef<SVGPathElement>(null);
-  const { mode, selectedTransitionId, automaton, dispatch } = useAutomatonStore();
+  const store = useAutomatonStore();
+  const { mode, selectedTransitionId, automaton, dispatch } = store;
+  
+  if (!automaton || !dispatch) {
+    console.error('Store not properly initialized');
+    return null;
+  }
 
   const path = calculateTransitionPath(fromState, toState, transition.controlPoint);
   const arrowPath = calculateArrowHead(
@@ -89,12 +95,12 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
         width="40"
         height="24"
       >
-        <div className="relative">
+        <div className="relative flex items-center justify-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
-                variant="ghost" 
-                className="h-6 w-full px-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                variant="secondary"
+                className="h-6 min-w-[2rem] px-2 text-sm font-medium bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
               >
                 {transition.input}
               </Button>
