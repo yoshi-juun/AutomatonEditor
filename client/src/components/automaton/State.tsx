@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -21,20 +21,19 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'transition') {
-      if (selectedStateId === null) {
-        // 最初の状態を選択
-        dispatch({ type: 'SELECT_STATE', payload: state.id });
-      } else if (selectedStateId !== state.id) {
-        // 2つ目の状態を選択し、遷移を作成
+      // 選択状態を視覚的に表示
+      dispatch({ type: 'SELECT_STATE', payload: state.id });
+      
+      if (selectedStateId && selectedStateId !== state.id) {
+        // 2つの異なる状態が選択された場合のみ遷移を作成
         dispatch({
           type: 'ADD_TRANSITION',
           payload: {
             from: selectedStateId,
             to: state.id,
-            input: '0'  // デフォルト入力
+            input: '0'
           }
         });
-        dispatch({ type: 'SELECT_STATE', payload: null });  // 選択をリセット
       }
       return;
     }
@@ -46,13 +45,11 @@ export function State({ state }: StateProps) {
       const ctm = svg.getScreenCTM();
       if (!ctm) return;
 
-      // クリックされた位置のSVG座標を計算
       const point = svg.createSVGPoint();
       point.x = e.clientX;
       point.y = e.clientY;
       const svgPoint = point.matrixTransform(ctm.inverse());
 
-      // ドラッグオフセットをクロージャで管理
       const offsetX = svgPoint.x - state.position.x;
       const offsetY = svgPoint.y - state.position.y;
 
@@ -108,7 +105,6 @@ export function State({ state }: StateProps) {
       onDoubleClick={handleDoubleClick}
       className="cursor-move"
     >
-      {/* Initial state marker */}
       {state.isInitial && (
         <path
           d={`M ${-50} 0 L ${-25} 0`}
@@ -117,19 +113,16 @@ export function State({ state }: StateProps) {
         />
       )}
 
-      {/* State circle */}
       <circle
         r="25"
         className={`
           fill-background
           stroke-primary
-          stroke-2
-          ${selectedStateId === state.id ? 'stroke-[3]' : ''}
+          ${mode === 'transition' && selectedStateId === state.id ? 'stroke-[4] stroke-blue-500' : 'stroke-2'}
           ${state.isAccepting ? 'double-circle' : ''}
         `}
       />
 
-      {/* State label */}
       {isEditing ? (
         <foreignObject x="-20" y="-12" width="40" height="24">
           <Input

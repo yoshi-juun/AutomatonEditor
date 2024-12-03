@@ -7,9 +7,14 @@ export function Canvas() {
   const svgRef = useRef<SVGSVGElement>(null);
   const { automaton, mode, selectedStateId, dispatch } = useAutomatonStore();
 
+  useEffect(() => {
+    // モードが変更されたら選択状態をリセット
+    dispatch({ type: 'SELECT_STATE', payload: null });
+  }, [mode, dispatch]);
+
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (mode === 'transition' && selectedStateId !== null) {
-      // トランジションモードでキャンバスをクリックした場合、選択をクリア
+    if (mode === 'transition' && selectedStateId) {
+      // キャンバスクリックで選択解除（トランジションモードの場合のみ）
       dispatch({ type: 'SELECT_STATE', payload: null });
       return;
     }
