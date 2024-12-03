@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { State } from './State';
 import { Transition } from './Transition';
 import { useAutomatonStore } from '../../lib/automatonStore';
@@ -8,7 +8,8 @@ export function Canvas() {
   const { automaton, mode, selectedStateId, dispatch } = useAutomatonStore();
 
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (mode === 'transition') {
+    if (mode === 'transition' && selectedStateId !== null) {
+      // トランジションモードでキャンバスをクリックした場合、選択をクリア
       dispatch({ type: 'SELECT_STATE', payload: null });
       return;
     }
@@ -35,23 +36,26 @@ export function Canvas() {
     });
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      const selectedState = useAutomatonStore.getState().selectedStateId;
-      const selectedTransition = useAutomatonStore.getState().selectedTransitionId;
+  // キーボードイベントの設定と解除
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const selectedState = useAutomatonStore.getState().selectedStateId;
+        const selectedTransition = useAutomatonStore.getState().selectedTransitionId;
 
-      if (selectedState) {
-        dispatch({ type: 'DELETE_STATE', payload: selectedState });
-      } else if (selectedTransition) {
-        dispatch({ type: 'DELETE_TRANSITION', payload: selectedTransition });
+        if (selectedState) {
+          dispatch({ type: 'DELETE_STATE', payload: selectedState });
+        } else if (selectedTransition) {
+          dispatch({ type: 'DELETE_TRANSITION', payload: selectedTransition });
+        }
       }
-    }
-  };
+    };
 
-  // キーボードイベントリスナーの設定
-  if (typeof window !== 'undefined') {
     window.addEventListener('keydown', handleKeyDown);
-  }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dispatch]);
 
   return (
     <svg

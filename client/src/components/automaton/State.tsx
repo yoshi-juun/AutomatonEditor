@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,25 @@ export function State({ state }: StateProps) {
     
     if (mode === 'delete') {
       dispatch({ type: 'DELETE_STATE', payload: state.id });
+      return;
+    }
+
+    if (mode === 'transition') {
+      if (selectedStateId === null) {
+        // 最初の状態を選択
+        dispatch({ type: 'SELECT_STATE', payload: state.id });
+      } else if (selectedStateId !== state.id) {
+        // 2つ目の状態を選択し、遷移を作成
+        dispatch({
+          type: 'ADD_TRANSITION',
+          payload: {
+            from: selectedStateId,
+            to: state.id,
+            input: '0'  // デフォルト入力
+          }
+        });
+        dispatch({ type: 'SELECT_STATE', payload: null });  // 選択をリセット
+      }
       return;
     }
 
@@ -62,9 +81,6 @@ export function State({ state }: StateProps) {
 
       window.addEventListener('mousemove', handleMove);
       window.addEventListener('mouseup', handleUp);
-      dispatch({ type: 'SELECT_STATE', payload: state.id });
-    } else if (mode === 'transition') {
-      dispatch({ type: 'SELECT_STATE', payload: state.id });
     }
   };
 

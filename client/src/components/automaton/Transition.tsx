@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
-import { Transition as TransitionType, State, Point } from '../../lib/automatonTypes';
+import { Transition as TransitionType, State } from '../../lib/automatonTypes';
 import { calculateTransitionPath, calculateArrowHead, isPointNearPath } from '../../lib/automatonUtils';
 import { Input } from '@/components/ui/input';
 
@@ -13,7 +13,7 @@ interface TransitionProps {
 export function Transition({ transition, fromState, toState }: TransitionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const pathRef = useRef<SVGPathElement>(null);
-  const { selectedTransitionId, dispatch } = useAutomatonStore();
+  const { mode, selectedTransitionId, dispatch } = useAutomatonStore();
 
   const path = calculateTransitionPath(fromState, toState, transition.controlPoint);
   const arrowPath = calculateArrowHead(
@@ -24,6 +24,11 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (mode === 'delete') {
+      dispatch({ type: 'DELETE_TRANSITION', payload: transition.id });
+      return;
+    }
+
     if (pathRef.current && isPointNearPath({ x: e.clientX, y: e.clientY }, pathRef.current)) {
       dispatch({ type: 'SELECT_TRANSITION', payload: transition.id });
     }
