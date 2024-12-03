@@ -100,7 +100,7 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="secondary"
-                className="h-6 min-w-[2rem] px-2 text-sm font-medium bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                className="h-6 min-w-[2rem] px-2 text-sm font-medium bg-background border border-border shadow-sm hover:bg-accent"
               >
                 {transition.input}
               </Button>
