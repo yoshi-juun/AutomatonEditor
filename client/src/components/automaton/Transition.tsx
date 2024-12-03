@@ -120,7 +120,9 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
                 </DropdownMenuItem>
               ))}
               <DropdownMenuItem
-                onClick={() => setIsEditing(true)}
+                onSelect={() => {
+                  setIsEditing(true);
+                }}
                 className="justify-center font-medium"
               >
                 新規入力
@@ -128,7 +130,10 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
             </DropdownMenuContent>
           </DropdownMenu>
           {isEditing && (
-            <div className="fixed inset-0 flex items-center justify-center bg-background/80">
+            <div 
+              className="fixed inset-0 flex items-center justify-center bg-background/80"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="bg-card p-4 rounded-lg shadow-lg">
                 <Input
                   type="text"
