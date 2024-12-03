@@ -49,18 +49,7 @@ export function Canvas() {
     };
   }, [dispatch]);
 
-  // ドラッグ終了時に状態をクリア
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      dispatch({ type: 'SELECT_STATE', payload: null });
-    };
-
-    window.addEventListener('mouseup', handleGlobalMouseUp);
-    return () => {
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
-    };
-  }, [dispatch]);
-
+  // キャンバスクリック時の処理
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (mode === 'transition' && selectedStateId) {
       dispatch({ type: 'SELECT_STATE', payload: null });
@@ -84,8 +73,8 @@ export function Canvas() {
       type: 'ADD_STATE',
       payload: {
         x: svgPoint.x,
-        y: svgPoint.y
-      }
+        y: svgPoint.y,
+      },
     });
   };
 
@@ -111,16 +100,16 @@ export function Canvas() {
         </marker>
       </defs>
 
-      {automaton.transitions.map(transition => (
+      {automaton.transitions.map((transition) => (
         <Transition
           key={transition.id}
           transition={transition}
-          fromState={automaton.states.find(s => s.id === transition.from)!}
-          toState={automaton.states.find(s => s.id === transition.to)!}
+          fromState={automaton.states.find((s) => s.id === transition.from)!}
+          toState={automaton.states.find((s) => s.id === transition.to)!}
         />
       ))}
 
-      {automaton.states.map(state => (
+      {automaton.states.map((state) => (
         <State key={state.id} state={state} />
       ))}
     </svg>

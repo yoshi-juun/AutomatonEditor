@@ -20,12 +20,6 @@ export function State({ state }: StateProps) {
       return;
     }
 
-    if (mode === 'transition') {
-      e.preventDefault();
-      dispatch({ type: 'SELECT_STATE', payload: state.id });
-      return;
-    }
-
     if (mode === 'drag') {
       const svg = stateRef.current?.ownerSVGElement;
       if (!svg) return;
@@ -60,7 +54,7 @@ export function State({ state }: StateProps) {
       };
 
       const handleUp = () => {
-        // リスナーを確実に解除
+        // 必ずイベントリスナーを解除
         window.removeEventListener('mousemove', handleMove);
         window.removeEventListener('mouseup', handleUp);
 
@@ -68,13 +62,15 @@ export function State({ state }: StateProps) {
         dispatch({ type: 'SELECT_STATE', payload: null });
       };
 
+      // イベントリスナーを登録
       window.addEventListener('mousemove', handleMove);
       window.addEventListener('mouseup', handleUp);
 
-      // 状態の選択を更新
+      // 状態を選択
       dispatch({ type: 'SELECT_STATE', payload: state.id });
     }
   };
+
 
 
   const handleMouseUp = (e: React.MouseEvent) => {

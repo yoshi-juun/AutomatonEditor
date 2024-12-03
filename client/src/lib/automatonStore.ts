@@ -65,10 +65,10 @@ export const useAutomatonStore = create<
           ...state,
           automaton: {
             ...state.automaton,
-            states: state.automaton.states.map(s =>
+            states: state.automaton.states.map((s) =>
               s.id === action.payload.id ? action.payload : s
-            )
-          }
+            ),
+          },
         }));
         break;
 
