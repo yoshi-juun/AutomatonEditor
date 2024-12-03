@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,8 @@ interface StateProps {
 
 export function State({ state }: StateProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
+  const stateRef = useRef<SVGGElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -21,67 +21,50 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'drag') {
-      const svg = (e.target as SVGElement).ownerSVGElement;
+      const svg = stateRef.current?.ownerSVGElement;
       if (!svg) return;
 
       const ctm = svg.getScreenCTM();
       if (!ctm) return;
 
+      // クリックされた位置のSVG座標を計算
       const point = svg.createSVGPoint();
       point.x = e.clientX;
       point.y = e.clientY;
-      
-      setDragOffset({
-        x: (point.x - ctm.e) / ctm.a - state.position.x,
-        y: (point.y - ctm.f) / ctm.d - state.position.y
-      });
-      
+      const svgPoint = point.matrixTransform(ctm.inverse());
+
+      // ドラッグオフセットをクロージャで管理
+      const offsetX = svgPoint.x - state.position.x;
+      const offsetY = svgPoint.y - state.position.y;
+
+      const handleMove = (moveEvent: MouseEvent) => {
+        const movePoint = svg.createSVGPoint();
+        movePoint.x = moveEvent.clientX;
+        movePoint.y = moveEvent.clientY;
+        const moveSvgPoint = movePoint.matrixTransform(ctm.inverse());
+
+        dispatch({
+          type: 'UPDATE_STATE',
+          payload: {
+            ...state,
+            position: {
+              x: moveSvgPoint.x - offsetX,
+              y: moveSvgPoint.y - offsetY
+            }
+          }
+        });
+      };
+
+      const handleUp = () => {
+        window.removeEventListener('mousemove', handleMove);
+        window.removeEventListener('mouseup', handleUp);
+      };
+
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('mouseup', handleUp);
       dispatch({ type: 'SELECT_STATE', payload: state.id });
     } else if (mode === 'transition') {
       dispatch({ type: 'SELECT_STATE', payload: state.id });
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (selectedStateId !== state.id || mode !== 'drag') return;
-
-    const svg = document.querySelector('svg');
-    if (!svg) return;
-
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-
-    const point = svg.createSVGPoint();
-    point.x = e.clientX;
-    point.y = e.clientY;
-
-    dispatch({
-      type: 'UPDATE_STATE',
-      payload: {
-        ...state,
-        position: {
-          x: (point.x - ctm.e) / ctm.a - dragOffset.x,
-          y: (point.y - ctm.f) / ctm.d - dragOffset.y
-        }
-      }
-    });
-  };
-
-  const handleMouseUp = () => {
-    if (mode === 'transition') {
-      if (selectedStateId && selectedStateId !== state.id) {
-        dispatch({
-          type: 'ADD_TRANSITION',
-          payload: {
-            from: selectedStateId,
-            to: state.id,
-            input: '0'
-          }
-        });
-      }
-      dispatch({ type: 'SELECT_STATE', payload: null });
-    } else if (mode === 'drag') {
-      dispatch({ type: 'SELECT_STATE', payload: null });
     }
   };
 
@@ -101,20 +84,9 @@ export function State({ state }: StateProps) {
     setIsEditing(false);
   };
 
-  useEffect(() => {
-    if (selectedStateId === state.id && mode === 'drag') {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [selectedStateId, state.id, mode]);
-
   return (
     <g
+      ref={stateRef}
       transform={`translate(${state.position.x},${state.position.y})`}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
