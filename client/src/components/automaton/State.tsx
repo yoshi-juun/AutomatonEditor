@@ -33,7 +33,6 @@ export function State({ state }: StateProps) {
       const ctm = svg.getScreenCTM();
       if (!ctm) return;
 
-      // マウスの初期位置を記録
       const point = svg.createSVGPoint();
       point.x = e.clientX;
       point.y = e.clientY;
@@ -63,10 +62,11 @@ export function State({ state }: StateProps) {
       const handleUp = () => {
         window.removeEventListener('mousemove', handleMove);
         window.removeEventListener('mouseup', handleUp);
+        dispatch({ type: 'SELECT_STATE', payload: null });  // 選択状態をクリア
       };
 
       window.addEventListener('mousemove', handleMove);
-      window.addEventListener('mouseup', handleUp, { once: true }); // onceオプションを追加
+      window.addEventListener('mouseup', handleUp);  // onceオプションを削除
     }
   };
 
