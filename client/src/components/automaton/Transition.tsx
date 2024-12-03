@@ -65,9 +65,10 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputs = e.target.value.split(',').map(i => i.trim()).filter(i => i);
     dispatch({
       type: 'UPDATE_TRANSITION',
-      payload: { ...transition, input: e.target.value }
+      payload: { ...transition, input: inputs.join(', ') }
     });
   };
 
@@ -121,8 +122,8 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
                     key={input}
                     onClick={() => {
                       if (automaton.type === 'NFA') {
-                        // NFAモードでは入力の追加/削除
-                        const newInputs = isSelected
+                        const currentInputs = transition.input.split(',').map(i => i.trim());
+                        const newInputs = currentInputs.includes(input)
                           ? currentInputs.filter(i => i !== input)
                           : [...currentInputs, input];
                         dispatch({
@@ -130,7 +131,6 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
                           payload: { ...transition, input: newInputs.join(', ') }
                         });
                       } else {
-                        // DFAモードでは単一入力の置き換え
                         dispatch({
                           type: 'UPDATE_TRANSITION',
                           payload: { ...transition, input }
