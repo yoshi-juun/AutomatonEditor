@@ -8,7 +8,8 @@ import {
   Trash2,
   Play,
   Pause,
-  RotateCcw
+  RotateCcw,
+  Move
 } from "lucide-react";
 
 export function Controls() {
@@ -44,6 +45,14 @@ export function Controls() {
             <Label htmlFor="delete" className="flex items-center space-x-1">
               <Trash2 className="h-4 w-4" />
               <span>Delete</span>
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="drag" id="drag" />
+            <Label htmlFor="drag" className="flex items-center space-x-1">
+              <Move className="h-4 w-4" />
+              <span>Move</span>
             </Label>
           </div>
 

@@ -13,18 +13,23 @@ export function State({ state }: StateProps) {
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // イベントの伝播を停止
+    e.stopPropagation();
+    
     if (mode === 'delete') {
       dispatch({ type: 'DELETE_STATE', payload: state.id });
       return;
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
-
-    dispatch({ type: 'SELECT_STATE', payload: state.id });
+    // ドラッグモード時のみ処理
+    if (mode === 'drag') {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      dispatch({ type: 'SELECT_STATE', payload: state.id });
+    }
   };
 
   const handleMouseMove = (e: MouseEvent) => {

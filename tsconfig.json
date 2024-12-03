@@ -9,6 +9,7 @@
     "strict": true,
     "target": "es2015",
     "downlevelIteration": true,
+    "downlevelIteration": true,
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "preserve",
     "esModuleInterop": true,
