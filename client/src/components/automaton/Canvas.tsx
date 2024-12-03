@@ -13,6 +13,20 @@ export function Canvas() {
     }
   }, [mode, dispatch]);
 
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      if (mode === 'transition') {
+        dispatch({ type: 'SELECT_STATE', payload: null });
+      }
+    };
+
+    // キャンバス外のクリックで選択解除
+    document.addEventListener('click', handleGlobalClick);
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [mode, dispatch]);
+
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (mode === 'transition' && selectedStateId) {
       // キャンバスクリックで選択解除（トランジションモードの場合のみ）

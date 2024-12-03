@@ -21,6 +21,7 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'transition') {
+      e.preventDefault(); // イベントのデフォルト動作を防止
       dispatch({ type: 'SELECT_STATE', payload: state.id });
       return;
     }

@@ -36,7 +36,10 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsEditing(true);
+    e.preventDefault();
+    if (mode !== 'delete') {
+      setIsEditing(true);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +75,6 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
         onDoubleClick={handleDoubleClick}
       />
 
-      {/* Transition label */}
       <foreignObject
         x={midpoint.x - 15}
         y={midpoint.y - 12}
@@ -86,7 +88,8 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             autoFocus
-            className="w-full h-full text-center bg-transparent border-none"
+            className="w-8 h-6 text-center bg-background border border-input px-1"
+            onClick={(e) => e.stopPropagation()}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-sm font-medium">
