@@ -21,7 +21,7 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'transition') {
-      e.preventDefault(); // イベントのデフォルト動作を防止
+      e.preventDefault();
       dispatch({ type: 'SELECT_STATE', payload: state.id });
       return;
     }
@@ -41,7 +41,11 @@ export function State({ state }: StateProps) {
       const offsetX = svgPoint.x - state.position.x;
       const offsetY = svgPoint.y - state.position.y;
 
+      // ドラッグ開始時に選択状態を設定
+      dispatch({ type: 'SELECT_STATE', payload: state.id });
+
       const handleMove = (moveEvent: MouseEvent) => {
+        moveEvent.preventDefault();  // デフォルトのドラッグ動作を防止
         const movePoint = svg.createSVGPoint();
         movePoint.x = moveEvent.clientX;
         movePoint.y = moveEvent.clientY;
@@ -59,14 +63,20 @@ export function State({ state }: StateProps) {
         });
       };
 
-      const handleUp = () => {
+      const handleUp = (upEvent: MouseEvent) => {
+        upEvent.preventDefault();  // デフォルトの動作を防止
+        
+        // イベントリスナーを確実に解除
         window.removeEventListener('mousemove', handleMove);
         window.removeEventListener('mouseup', handleUp);
-        dispatch({ type: 'SELECT_STATE', payload: null });  // 選択状態をクリア
+        
+        // ドラッグ終了時に選択状態をクリア
+        dispatch({ type: 'SELECT_STATE', payload: null });
       };
 
+      // イベントリスナーを追加
       window.addEventListener('mousemove', handleMove);
-      window.addEventListener('mouseup', handleUp);  // onceオプションを削除
+      window.addEventListener('mouseup', handleUp);
     }
   };
 
