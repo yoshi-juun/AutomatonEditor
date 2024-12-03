@@ -21,10 +21,17 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'drag') {
-      const rect = e.currentTarget.getBoundingClientRect();
+      const svg = (e.target as SVGElement).ownerSVGElement;
+      if (!svg) return;
+
+      const point = svg.createSVGPoint();
+      point.x = e.clientX;
+      point.y = e.clientY;
+      const transformedPoint = point.matrixTransform(svg.getScreenCTM()?.inverse());
+      
       setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: transformedPoint.x - state.position.x,
+        y: transformedPoint.y - state.position.y
       });
       dispatch({ type: 'SELECT_STATE', payload: state.id });
     } else if (mode === 'transition') {
@@ -35,30 +42,40 @@ export function State({ state }: StateProps) {
   const handleMouseMove = (e: MouseEvent) => {
     if (selectedStateId !== state.id || mode !== 'drag') return;
 
+    const svg = document.querySelector('svg');
+    if (!svg) return;
+
+    const point = svg.createSVGPoint();
+    point.x = e.clientX;
+    point.y = e.clientY;
+    const transformedPoint = point.matrixTransform(svg.getScreenCTM()?.inverse());
+
     dispatch({
       type: 'UPDATE_STATE',
       payload: {
         ...state,
         position: {
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
+          x: transformedPoint.x - dragOffset.x,
+          y: transformedPoint.y - dragOffset.y
         }
       }
     });
   };
 
   const handleMouseUp = () => {
-    if (selectedStateId === state.id) {
+    if (mode === 'transition') {
+      if (selectedStateId && selectedStateId !== state.id) {
+        dispatch({
+          type: 'ADD_TRANSITION',
+          payload: {
+            from: selectedStateId,
+            to: state.id,
+            input: '0'
+          }
+        });
+      }
       dispatch({ type: 'SELECT_STATE', payload: null });
-    } else if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
-      dispatch({
-        type: 'ADD_TRANSITION',
-        payload: {
-          from: selectedStateId,
-          to: state.id,
-          input: '0'
-        }
-      });
+    } else if (mode === 'drag') {
       dispatch({ type: 'SELECT_STATE', payload: null });
     }
   };
@@ -82,16 +99,14 @@ export function State({ state }: StateProps) {
   useEffect(() => {
     if (selectedStateId === state.id && mode === 'drag') {
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', () => {
-        dispatch({ type: 'SELECT_STATE', payload: null });
-      });
+      window.addEventListener('mouseup', handleMouseUp);
 
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [selectedStateId, state.id, mode]);
+  }, [selectedStateId, state.id, mode, handleMouseMove, handleMouseUp]);
 
   return (
     <g
