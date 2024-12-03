@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -21,20 +21,7 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'transition') {
-      // 選択状態を視覚的に表示
       dispatch({ type: 'SELECT_STATE', payload: state.id });
-      
-      if (selectedStateId && selectedStateId !== state.id) {
-        // 2つの異なる状態が選択された場合のみ遷移を作成
-        dispatch({
-          type: 'ADD_TRANSITION',
-          payload: {
-            from: selectedStateId,
-            to: state.id,
-            input: '0'
-          }
-        });
-      }
       return;
     }
 
@@ -81,6 +68,21 @@ export function State({ state }: StateProps) {
     }
   };
 
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
+      dispatch({
+        type: 'ADD_TRANSITION',
+        payload: {
+          from: selectedStateId,
+          to: state.id,
+          input: '0'
+        }
+      });
+    }
+  };
+
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
@@ -102,6 +104,7 @@ export function State({ state }: StateProps) {
       ref={stateRef}
       transform={`translate(${state.position.x},${state.position.y})`}
       onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       onDoubleClick={handleDoubleClick}
       className="cursor-move"
     >

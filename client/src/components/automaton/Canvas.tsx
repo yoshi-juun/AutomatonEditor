@@ -8,8 +8,9 @@ export function Canvas() {
   const { automaton, mode, selectedStateId, dispatch } = useAutomatonStore();
 
   useEffect(() => {
-    // モードが変更されたら選択状態をリセット
-    dispatch({ type: 'SELECT_STATE', payload: null });
+    if (mode !== 'transition') {
+      dispatch({ type: 'SELECT_STATE', payload: null });
+    }
   }, [mode, dispatch]);
 
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
