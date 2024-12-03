@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { Transition as TransitionType, State } from '../../lib/automatonTypes';
 import { calculateTransitionPath, calculateArrowHead, isPointNearPath } from '../../lib/automatonUtils';
@@ -18,16 +18,13 @@ interface TransitionProps {
 }
 
 export function Transition({ transition, fromState, toState }: TransitionProps) {
-  // 必要な状態が存在しない場合は何も描画しない
-  if (!fromState || !toState) return null;
-
   const [isEditing, setIsEditing] = useState(false);
   const pathRef = useRef<SVGPathElement>(null);
-  const store = useAutomatonStore();
-  const { mode, selectedTransitionId, automaton, dispatch } = store;
+  const { mode, selectedTransitionId, automaton, dispatch } = useAutomatonStore();
   
-  if (!automaton || !dispatch) {
-    console.error('Store not properly initialized');
+  // 必要な状態が存在しない場合は何も描画しない
+  if (!fromState || !toState || !automaton || !dispatch) {
+    console.error('Required props or store not properly initialized');
     return null;
   }
 
@@ -37,6 +34,18 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
     toState.position,
     transition.controlPoint
   );
+
+  // Calculate midpoint for label positioning
+  const [midpoint, setMidpoint] = useState({ x: 0, y: 0 });
+
+  // Watch path reference and recalculate midpoint when necessary
+  useEffect(() => {
+    if (pathRef.current) {
+      const pathLength = pathRef.current.getTotalLength();
+      const point = pathRef.current.getPointAtLength(pathLength / 2);
+      setMidpoint(point);
+    }
+  }, [pathRef.current, fromState.position, toState.position, transition.controlPoint]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -66,11 +75,6 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
     setIsEditing(false);
   };
 
-  // Calculate label position
-  const midpoint = pathRef.current?.getPointAtLength(
-    (pathRef.current?.getTotalLength() || 0) / 2
-  ) || { x: 0, y: 0 };
-
   return (
     <g>
       <path
@@ -94,6 +98,7 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
         y={midpoint.y - 12}
         width="40"
         height="24"
+        className="overflow-visible"
       >
         <div className="relative flex items-center justify-center">
           <DropdownMenu>
@@ -106,19 +111,40 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-24">
-              {Array.from(automaton.alphabet).map((input) => (
-                <DropdownMenuItem
-                  key={input}
-                  onClick={() => {
-                    dispatch({
-                      type: 'UPDATE_TRANSITION',
-                      payload: { ...transition, input }
-                    });
-                  }}
-                >
-                  {input}
-                </DropdownMenuItem>
-              ))}
+              {Array.from(automaton.alphabet).map((input) => {
+                // NFAモードでは複数入力を許可（カンマ区切り）
+                const currentInputs = transition.input.split(',').map(i => i.trim());
+                const isSelected = currentInputs.includes(input);
+                
+                return (
+                  <DropdownMenuItem
+                    key={input}
+                    onClick={() => {
+                      if (automaton.type === 'NFA') {
+                        // NFAモードでは入力の追加/削除
+                        const newInputs = isSelected
+                          ? currentInputs.filter(i => i !== input)
+                          : [...currentInputs, input];
+                        dispatch({
+                          type: 'UPDATE_TRANSITION',
+                          payload: { ...transition, input: newInputs.join(', ') }
+                        });
+                      } else {
+                        // DFAモードでは単一入力の置き換え
+                        dispatch({
+                          type: 'UPDATE_TRANSITION',
+                          payload: { ...transition, input }
+                        });
+                      }
+                    }}
+                  >
+                    <span className="mr-2">{input}</span>
+                    {automaton.type === 'NFA' && isSelected && (
+                      <span className="ml-auto">✓</span>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
               <DropdownMenuItem
                 onClick={() => setIsEditing(true)}
                 className="justify-center font-medium"
