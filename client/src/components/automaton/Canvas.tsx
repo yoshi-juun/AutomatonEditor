@@ -7,12 +7,14 @@ export function Canvas() {
   const svgRef = useRef<SVGSVGElement>(null);
   const { automaton, mode, selectedStateId, dispatch } = useAutomatonStore();
 
+  // モード変更時に選択をクリア
   useEffect(() => {
     if (mode !== 'transition') {
       dispatch({ type: 'SELECT_STATE', payload: null });
     }
   }, [mode, dispatch]);
 
+  // キャンバス外クリック時に選択を解除
   useEffect(() => {
     const handleGlobalClick = () => {
       if (mode === 'transition') {
@@ -20,43 +22,13 @@ export function Canvas() {
       }
     };
 
-    // キャンバス外のクリックで選択解除
     document.addEventListener('click', handleGlobalClick);
     return () => {
       document.removeEventListener('click', handleGlobalClick);
     };
   }, [mode, dispatch]);
 
-  const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (mode === 'transition' && selectedStateId) {
-      // キャンバスクリックで選択解除（トランジションモードの場合のみ）
-      dispatch({ type: 'SELECT_STATE', payload: null });
-      return;
-    }
-
-    if (mode !== 'state') return;
-
-    const svg = svgRef.current;
-    if (!svg) return;
-
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-
-    const point = svg.createSVGPoint();
-    point.x = e.clientX;
-    point.y = e.clientY;
-    const svgPoint = point.matrixTransform(ctm.inverse());
-    
-    dispatch({
-      type: 'ADD_STATE',
-      payload: {
-        x: svgPoint.x,
-        y: svgPoint.y
-      }
-    });
-  };
-
-  // キーボードイベントの設定と解除
+  // キーボードイベント
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -76,6 +48,46 @@ export function Canvas() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [dispatch]);
+
+  // ドラッグ終了時に状態をクリア
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      dispatch({ type: 'SELECT_STATE', payload: null });
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [dispatch]);
+
+  const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (mode === 'transition' && selectedStateId) {
+      dispatch({ type: 'SELECT_STATE', payload: null });
+      return;
+    }
+
+    if (mode !== 'state') return;
+
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+
+    const point = svg.createSVGPoint();
+    point.x = e.clientX;
+    point.y = e.clientY;
+    const svgPoint = point.matrixTransform(ctm.inverse());
+
+    dispatch({
+      type: 'ADD_STATE',
+      payload: {
+        x: svgPoint.x,
+        y: svgPoint.y
+      }
+    });
+  };
 
   return (
     <svg
@@ -98,7 +110,7 @@ export function Canvas() {
           />
         </marker>
       </defs>
-      
+
       {automaton.transitions.map(transition => (
         <Transition
           key={transition.id}
@@ -107,7 +119,7 @@ export function Canvas() {
           toState={automaton.states.find(s => s.id === transition.to)!}
         />
       ))}
-      
+
       {automaton.states.map(state => (
         <State key={state.id} state={state} />
       ))}

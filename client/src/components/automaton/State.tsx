@@ -9,19 +9,19 @@ interface StateProps {
 
 export function State({ state }: StateProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
   const stateRef = useRef<SVGGElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (mode === 'delete') {
       dispatch({ type: 'DELETE_STATE', payload: state.id });
       return;
     }
 
     if (mode === 'transition') {
+      e.preventDefault();
       dispatch({ type: 'SELECT_STATE', payload: state.id });
       return;
     }
@@ -38,10 +38,8 @@ export function State({ state }: StateProps) {
       point.y = e.clientY;
       const svgPoint = point.matrixTransform(ctm.inverse());
 
-      setDragOffset({
-        x: svgPoint.x - state.position.x,
-        y: svgPoint.y - state.position.y
-      });
+      const offsetX = svgPoint.x - state.position.x;
+      const offsetY = svgPoint.y - state.position.y;
 
       const handleMove = (moveEvent: MouseEvent) => {
         const movePoint = svg.createSVGPoint();
@@ -54,22 +52,30 @@ export function State({ state }: StateProps) {
           payload: {
             ...state,
             position: {
-              x: moveSvgPoint.x - dragOffset.x,
-              y: moveSvgPoint.y - dragOffset.y
-            }
-          }
+              x: moveSvgPoint.x - offsetX,
+              y: moveSvgPoint.y - offsetY,
+            },
+          },
         });
       };
 
       const handleUp = () => {
+        // リスナーを確実に解除
         window.removeEventListener('mousemove', handleMove);
         window.removeEventListener('mouseup', handleUp);
+
+        // 状態の選択を解除
+        dispatch({ type: 'SELECT_STATE', payload: null });
       };
 
       window.addEventListener('mousemove', handleMove);
       window.addEventListener('mouseup', handleUp);
+
+      // 状態の選択を更新
+      dispatch({ type: 'SELECT_STATE', payload: state.id });
     }
   };
+
 
   const handleMouseUp = (e: React.MouseEvent) => {
     e.stopPropagation();
