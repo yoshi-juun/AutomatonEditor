@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';

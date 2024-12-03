@@ -3,6 +3,7 @@ import { Canvas } from "../components/automaton/Canvas";
 import { Controls } from "../components/automaton/Controls";
 import { Simulator } from "../components/automaton/Simulator";
 import { useAutomatonStore } from "../lib/automatonStore";
+import { AutomatonState } from '../lib/automatonTypes';
 
 export default function AutomatonEditor() {
   const mode = useAutomatonStore((state: AutomatonState) => state.mode);
