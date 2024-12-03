@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { State as StateType } from '../../lib/automatonTypes';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,8 @@ export function State({ state }: StateProps) {
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
   const stateRef = useRef<SVGGElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // クリックイベントを一元化
+  const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (mode === 'delete') {
@@ -21,7 +22,19 @@ export function State({ state }: StateProps) {
     }
 
     if (mode === 'transition') {
-      dispatch({ type: 'SELECT_STATE', payload: state.id });
+      if (selectedStateId === null) {
+        dispatch({ type: 'SELECT_STATE', payload: state.id });
+      } else if (selectedStateId !== state.id) {
+        dispatch({
+          type: 'ADD_TRANSITION',
+          payload: {
+            from: selectedStateId,
+            to: state.id,
+            input: '0'
+          }
+        });
+        dispatch({ type: 'SELECT_STATE', payload: null });
+      }
       return;
     }
 
@@ -68,21 +81,6 @@ export function State({ state }: StateProps) {
     }
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (mode === 'transition' && selectedStateId && selectedStateId !== state.id) {
-      dispatch({
-        type: 'ADD_TRANSITION',
-        payload: {
-          from: selectedStateId,
-          to: state.id,
-          input: '0'
-        }
-      });
-    }
-  };
-
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
@@ -103,8 +101,7 @@ export function State({ state }: StateProps) {
     <g
       ref={stateRef}
       transform={`translate(${state.position.x},${state.position.y})`}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       className="cursor-move"
     >
