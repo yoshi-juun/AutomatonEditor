@@ -51,4 +51,6 @@ export type AutomatonAction =
   | { type: 'SELECT_TRANSITION'; payload: string | null }
   | { type: 'START_SIMULATION'; payload: string }
   | { type: 'STEP_SIMULATION' }
-  | { type: 'STOP_SIMULATION' };
+  | { type: 'STOP_SIMULATION' }
+  | { type: 'TOGGLE_AUTOMATON_TYPE' }
+  | { type: 'CONVERT_TO_DFA' };

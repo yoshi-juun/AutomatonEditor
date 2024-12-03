@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 export function Controls() {
-  const { mode, dispatch } = useAutomatonStore();
+  const { mode, automaton, dispatch } = useAutomatonStore();
 
   return (
     <div className="space-y-6">
@@ -80,6 +80,26 @@ export function Controls() {
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              dispatch({ type: 'TOGGLE_AUTOMATON_TYPE' });
+            }}
+            className="w-full"
+          >
+            {automaton.type === 'DFA' ? 'Switch to NFA' : 'Switch to DFA'}
+          </Button>
+          {automaton.type === 'NFA' && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                dispatch({ type: 'CONVERT_TO_DFA' });
+              }}
+              className="w-full"
+            >
+              Convert to DFA
+            </Button>
+          )}
         </div>
       </div>
     </div>
