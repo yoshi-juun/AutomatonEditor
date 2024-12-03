@@ -12,7 +12,52 @@ export function State({ state }: StateProps) {
   const { mode, selectedStateId, dispatch } = useAutomatonStore();
   const stateRef = useRef<SVGGElement>(null);
 
-  // クリックイベントを一元化
+  const handleDragStart = (e: React.MouseEvent) => {
+    if (mode !== 'drag') return;
+    
+    const svg = stateRef.current?.ownerSVGElement;
+    if (!svg) return;
+
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+
+    // マウスの初期位置を記録
+    const point = svg.createSVGPoint();
+    point.x = e.clientX;
+    point.y = e.clientY;
+    const svgPoint = point.matrixTransform(ctm.inverse());
+
+    // ドラッグオフセットを計算
+    const offsetX = svgPoint.x - state.position.x;
+    const offsetY = svgPoint.y - state.position.y;
+
+    const handleMove = (moveEvent: MouseEvent) => {
+      const movePoint = svg.createSVGPoint();
+      movePoint.x = moveEvent.clientX;
+      movePoint.y = moveEvent.clientY;
+      const moveSvgPoint = movePoint.matrixTransform(ctm.inverse());
+
+      dispatch({
+        type: 'UPDATE_STATE',
+        payload: {
+          ...state,
+          position: {
+            x: moveSvgPoint.x - offsetX,
+            y: moveSvgPoint.y - offsetY
+          }
+        }
+      });
+    };
+
+    const handleUp = () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -37,48 +82,6 @@ export function State({ state }: StateProps) {
       }
       return;
     }
-
-    if (mode === 'drag') {
-      const svg = stateRef.current?.ownerSVGElement;
-      if (!svg) return;
-
-      const ctm = svg.getScreenCTM();
-      if (!ctm) return;
-
-      const point = svg.createSVGPoint();
-      point.x = e.clientX;
-      point.y = e.clientY;
-      const svgPoint = point.matrixTransform(ctm.inverse());
-
-      const offsetX = svgPoint.x - state.position.x;
-      const offsetY = svgPoint.y - state.position.y;
-
-      const handleMove = (moveEvent: MouseEvent) => {
-        const movePoint = svg.createSVGPoint();
-        movePoint.x = moveEvent.clientX;
-        movePoint.y = moveEvent.clientY;
-        const moveSvgPoint = movePoint.matrixTransform(ctm.inverse());
-
-        dispatch({
-          type: 'UPDATE_STATE',
-          payload: {
-            ...state,
-            position: {
-              x: moveSvgPoint.x - offsetX,
-              y: moveSvgPoint.y - offsetY
-            }
-          }
-        });
-      };
-
-      const handleUp = () => {
-        window.removeEventListener('mousemove', handleMove);
-        window.removeEventListener('mouseup', handleUp);
-      };
-
-      window.addEventListener('mousemove', handleMove);
-      window.addEventListener('mouseup', handleUp);
-    }
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -102,6 +105,7 @@ export function State({ state }: StateProps) {
       ref={stateRef}
       transform={`translate(${state.position.x},${state.position.y})`}
       onClick={handleClick}
+      onMouseDown={handleDragStart}
       onDoubleClick={handleDoubleClick}
       className="cursor-move"
     >
