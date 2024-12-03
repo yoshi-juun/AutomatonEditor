@@ -3,6 +3,13 @@ import { useAutomatonStore } from '../../lib/automatonStore';
 import { Transition as TransitionType, State } from '../../lib/automatonTypes';
 import { calculateTransitionPath, calculateArrowHead, isPointNearPath } from '../../lib/automatonUtils';
 import { Input } from '@/components/ui/input';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 interface TransitionProps {
   transition: TransitionType;
@@ -74,23 +81,54 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
 
       {/* Transition label */}
       <foreignObject
-        x={midpoint.x - 15}
+        x={midpoint.x - 20}
         y={midpoint.y - 12}
-        width="30"
+        width="40"
         height="24"
       >
-        {isEditing ? (
-          <Input
-            type="text"
-            value={transition.input}
-            onChange={handleInputChange}
-            onBlur={handleInputBlur}
-            autoFocus
-            className="w-full h-full text-center bg-transparent border-none"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm font-medium">
-            {transition.input}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className="h-6 w-full px-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+              {transition.input}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-24">
+            {[...automaton.alphabet].map((input) => (
+              <DropdownMenuItem
+                key={input}
+                onSelect={() => {
+                  dispatch({
+                    type: 'UPDATE_TRANSITION',
+                    payload: { ...transition, input }
+                  });
+                }}
+              >
+                {input}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuItem
+              onSelect={() => setIsEditing(true)}
+              className="justify-center font-medium"
+            >
+              新規入力
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {isEditing && (
+          <div className="fixed inset-0 flex items-center justify-center bg-background/80">
+            <div className="bg-card p-4 rounded-lg shadow-lg">
+              <Input
+                type="text"
+                value={transition.input}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                autoFocus
+                className="w-24 text-center"
+              />
+            </div>
           </div>
         )}
       </foreignObject>

@@ -100,15 +100,33 @@ export const useAutomatonStore = create<
         break;
 
       case 'UPDATE_TRANSITION':
-        set((state: AutomatonState) => ({
-          ...state,
-          automaton: {
-            ...state.automaton,
-            transitions: state.automaton.transitions.map(t =>
-              t.id === action.payload.id ? action.payload : t
-            )
+        set((state: AutomatonState) => {
+          // 古い遷移を探す
+          const oldTransition = state.automaton.transitions.find(t => t.id === action.payload.id);
+          
+          // 新しい遷移のリストを作成
+          const newTransitions = state.automaton.transitions.map(t =>
+            t.id === action.payload.id ? action.payload : t
+          );
+          
+          // 新しいアルファベットセットを作成
+          const newAlphabet = new Set(state.automaton.alphabet);
+          // 古い入力値が他の遷移で使用されていない場合は削除
+          if (oldTransition && !newTransitions.some(t => t.input === oldTransition.input && t.id !== oldTransition.id)) {
+            newAlphabet.delete(oldTransition.input);
           }
-        }));
+          // 新しい入力値を追加
+          newAlphabet.add(action.payload.input);
+          
+          return {
+            ...state,
+            automaton: {
+              ...state.automaton,
+              transitions: newTransitions,
+              alphabet: newAlphabet
+            }
+          };
+        });
         break;
 
       case 'SET_MODE':
