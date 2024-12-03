@@ -204,93 +204,117 @@ export const useAutomatonStore = create<
         set((state: AutomatonState) => {
           if (!state.isNFA) return state;
 
-          // NFAからDFAへの変換ロジック
-          const nfa = state.automaton;
-          const newStates: State[] = [];
-          const newTransitions: Transition[] = [];
-          const processedStates = new Set<string>();
-          const stateQueue: Set<string>[] = [];
-
-          // 初期状態から開始
-          const initialState = nfa.states.find(s => s.isInitial);
-          if (!initialState) return state;
-
-          stateQueue.push(new Set([initialState.id]));
-          let stateCounter = 0;
-
-          while (stateQueue.length > 0) {
-            const currentStateSet = stateQueue.shift()!;
-            const currentStateIds = Array.from(currentStateSet).sort().join(',');
-
-            if (processedStates.has(currentStateIds)) continue;
-            processedStates.add(currentStateIds);
-
-            // 新しい状態を作成
-            const newState: State = {
-              id: `dfa_${stateCounter}`,
-              name: `q${stateCounter}`,
-              position: {
-                x: 100 + (stateCounter % 3) * 150,
-                y: 100 + Math.floor(stateCounter / 3) * 150
-              },
-              isInitial: stateCounter === 0,
-              isAccepting: Array.from(currentStateSet).some(
-                id => nfa.states.find(s => s.id === id)?.isAccepting
-              )
-            };
-            newStates.push(newState);
-
-            // 各入力文字に対する遷移を計算
-            for (const input of nfa.alphabet) {
-              const nextStates = new Set<string>();
+          try {
+            // 変換可能性チェック
+            const nfa = state.automaton;
+            const hasInvalidTransitions = nfa.states.some(state => {
+              const outgoingTransitions = nfa.transitions.filter(t => t.from === state.id);
+              const transitionInputs = outgoingTransitions.map(t => t.input);
+              const uniqueInputs = new Set(transitionInputs);
               
-              // 現在の状態セットの各状態から、入力に対する遷移先を収集
-              currentStateSet.forEach(stateId => {
-                nfa.transitions
-                  .filter(t => t.from === stateId && t.input === input)
-                  .forEach(t => nextStates.add(t.to));
+              // 同じ入力で異なる状態に遷移する場合は変換不可
+              return Array.from(uniqueInputs).some(input => {
+                const transitionsWithInput = outgoingTransitions.filter(t => t.input === input);
+                return transitionsWithInput.length > 1;
               });
+            });
 
-              if (nextStates.size > 0) {
-                const nextStateIds = Array.from(nextStates).sort().join(',');
-                let targetStateId: string;
+            if (hasInvalidTransitions) {
+              alert('このNFAは決定性有限オートマトンに変換できません。同じ入力で複数の状態に遷移する状態が存在します。');
+              return state;
+            }
 
-                // 既存の状態セットを探す
-                const existingStateIndex = Array.from(processedStates).findIndex(
-                  ids => ids === nextStateIds
-                );
+            // NFAからDFAへの変換ロジック
+            const newStates: State[] = [];
+            const newTransitions: Transition[] = [];
+            const processedStates = new Set<string>();
+            const stateQueue: Set<string>[] = [];
 
-                if (existingStateIndex === -1) {
-                  // 新しい状態セットを追加
-                  stateQueue.push(nextStates);
-                  targetStateId = `dfa_${stateCounter + stateQueue.length}`;
-                } else {
-                  targetStateId = `dfa_${existingStateIndex}`;
-                }
+            // 初期状態から開始
+            const initialState = nfa.states.find(s => s.isInitial);
+            if (!initialState) return state;
 
-                // 新しい遷移を追加
-                newTransitions.push({
-                  id: generateId(),
-                  from: newState.id,
-                  to: targetStateId,
-                  input
+            stateQueue.push(new Set([initialState.id]));
+            let stateCounter = 0;
+
+            while (stateQueue.length > 0) {
+              const currentStateSet = stateQueue.shift()!;
+              const currentStateIds = Array.from(currentStateSet).sort().join(',');
+
+              if (processedStates.has(currentStateIds)) continue;
+              processedStates.add(currentStateIds);
+
+              // 新しい状態を作成
+              const newState: State = {
+                id: `dfa_${stateCounter}`,
+                name: `q${stateCounter}`,
+                position: {
+                  x: 100 + (stateCounter % 3) * 150,
+                  y: 100 + Math.floor(stateCounter / 3) * 150
+                },
+                isInitial: stateCounter === 0,
+                isAccepting: Array.from(currentStateSet).some(
+                  id => nfa.states.find(s => s.id === id)?.isAccepting
+                )
+              };
+              newStates.push(newState);
+
+              // 各入力文字に対する遷移を計算
+              for (const input of nfa.alphabet) {
+                const nextStates = new Set<string>();
+                
+                // 現在の状態セットの各状態から、入力に対する遷移先を収集
+                currentStateSet.forEach(stateId => {
+                  nfa.transitions
+                    .filter(t => t.from === stateId && t.input === input)
+                    .forEach(t => nextStates.add(t.to));
                 });
+
+                if (nextStates.size > 0) {
+                  const nextStateIds = Array.from(nextStates).sort().join(',');
+                  let targetStateId: string;
+
+                  // 既存の状態セットを探す
+                  const existingStateIndex = Array.from(processedStates).findIndex(
+                    ids => ids === nextStateIds
+                  );
+
+                  if (existingStateIndex === -1) {
+                    // 新しい状態セットを追加
+                    stateQueue.push(nextStates);
+                    targetStateId = `dfa_${stateCounter + stateQueue.length}`;
+                  } else {
+                    targetStateId = `dfa_${existingStateIndex}`;
+                  }
+
+                  // 新しい遷移を追加
+                  newTransitions.push({
+                    id: generateId(),
+                    from: newState.id,
+                    to: targetStateId,
+                    input
+                  });
+                }
               }
+
+              stateCounter++;
             }
 
-            stateCounter++;
+            return {
+              ...state,
+              isNFA: false,
+              automaton: {
+                ...state.automaton,
+                type: 'DFA',
+                states: newStates,
+                transitions: newTransitions
+              }
+            };
+          } catch (error) {
+            console.error('DFA変換中にエラーが発生しました:', error);
+            alert('DFA変換中にエラーが発生しました。');
+            return state;
           }
-
-          return {
-            ...state,
-            isNFA: false,
-            automaton: {
-              ...state.automaton,
-              type: 'DFA',
-              states: newStates,
-              transitions: newTransitions
-            }
-          };
         });
         break;
     }
