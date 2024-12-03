@@ -24,12 +24,17 @@ export function Simulator() {
 
   const handleStart = () => {
     if (!inputString) {
-      setError('Please enter an input string');
+      setError('入力文字列を入力してください');
       return;
     }
 
-    if (!validateInput(inputString)) {
-      setError('Input contains invalid symbols');
+    const inputSymbols = inputString.split('').filter(char => char !== ' ');
+    const validSymbols = Array.from(automaton.alphabet).flatMap(s => s.split(',').map(i => i.trim()));
+    
+    const invalidSymbols = inputSymbols.filter(symbol => !validSymbols.includes(symbol));
+    if (invalidSymbols.length > 0) {
+      setError(`以下の入力記号は使用できません：${invalidSymbols.join(', ')}
+使用可能な記号：${validSymbols.join(', ')}`);
       return;
     }
 
@@ -126,6 +131,15 @@ export function Simulator() {
               return state?.name;
             }).join(', ') || 'None'}
           </div>
+          {simulation.step >= simulation.input.length && (
+            <div className="mt-2 p-2 rounded">
+              {isAccepting() ? (
+                <div className="text-green-600 font-medium">入力文字列は受理されました</div>
+              ) : (
+                <div className="text-red-600 font-medium">入力文字列は受理されませんでした</div>
+              )}
+            </div>
+          )}
           <div className={`text-sm font-medium ${
             simulation.step >= simulation.input.length
               ? (isAccepting() ? 'text-green-600' : 'text-red-600')

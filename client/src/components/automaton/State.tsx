@@ -124,6 +124,13 @@ export function State({ state }: StateProps) {
           stroke-primary
           ${mode === 'transition' && selectedStateId === state.id ? 'stroke-[4] stroke-blue-500' : 'stroke-2'}
           ${state.isAccepting ? 'double-circle' : ''}
+          ${useAutomatonStore.getState().simulation.currentStates.has(state.id) ? 'fill-green-100' : ''}
+          ${useAutomatonStore.getState().simulation.isRunning && 
+            useAutomatonStore.getState().simulation.step >= useAutomatonStore.getState().simulation.input.length && 
+            useAutomatonStore.getState().simulation.currentStates.has(state.id) && state.isAccepting ? 'fill-green-200' : ''}
+          ${useAutomatonStore.getState().simulation.isRunning && 
+            useAutomatonStore.getState().simulation.step >= useAutomatonStore.getState().simulation.input.length && 
+            useAutomatonStore.getState().simulation.currentStates.has(state.id) && !state.isAccepting ? 'fill-red-200' : ''}
         `}
       />
 
