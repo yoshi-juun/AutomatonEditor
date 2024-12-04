@@ -143,17 +143,20 @@ export function Simulator() {
                       const state = automaton.states.find(s => s.id === id);
                       return state?.name;
                     }).join(', ')
-                  : '初期状態'}
+                  : '非受理'}
               </span>
             </div>
             
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">入力記号:</span>
-              <span className="text-sm font-mono bg-accent px-2 py-1 rounded">
-                {simulation.step < simulation.input.length ? simulation.input[simulation.step] : '完了'}
-              </span>
-            </div>
+            {simulation.step < simulation.input.length && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">入力記号:</span>
+                <span className="text-sm font-mono bg-accent px-2 py-1 rounded">
+                  {simulation.input[simulation.step]}
+                </span>
+              </div>
+            )}
 
+            {/* 入力文字列の進行状況表示 */}
             {simulation.input && (
               <div className="flex items-center space-x-1 overflow-x-auto py-2">
                 {simulation.input.split('').map((char, i) => (
@@ -174,7 +177,8 @@ export function Simulator() {
               </div>
             )}
 
-            {simulation.step >= simulation.input.length && (
+            {/* 結果表示 */}
+            {(simulation.step >= simulation.input.length || simulation.currentStates.size === 0) && (
               <div className={`mt-2 p-3 rounded-lg ${
                 isAccepting() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
               }`}>

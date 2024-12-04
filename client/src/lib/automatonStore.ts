@@ -178,13 +178,26 @@ export const useAutomatonStore = create<
               .forEach(t => nextStates.add(t.to));
           });
 
+          // 次の状態がない場合は非受理として停止
+          if (nextStates.size === 0) {
+            return {
+              ...state,
+              simulation: {
+                ...state.simulation,
+                currentStates: nextStates,
+                step: state.simulation.input.length, // 強制的に終了
+                isRunning: true // 実行中フラグは維持
+              }
+            };
+          }
+
           return {
             ...state,
             simulation: {
               ...state.simulation,
               currentStates: nextStates,
               step: state.simulation.step + 1,
-              isRunning: state.simulation.step < state.simulation.input.length - 1
+              isRunning: true // 常にtrueを維持
             }
           };
         });
