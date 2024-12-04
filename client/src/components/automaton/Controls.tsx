@@ -6,17 +6,20 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useAutomatonStore } from "../../lib/automatonStore";
 import { MinimizationDialog } from "./MinimizationDialog";
+import { HelpDialog } from "./HelpDialog";
 import { 
   Circle,
   ArrowRight,
   Trash2,
-  Move
+  Move,
+  HelpCircle
 } from "lucide-react";
 
 export function Controls() {
   const { mode, isNFA, dispatch } = useAutomatonStore();
   const [regexInput, setRegexInput] = useState('');
   const [showMinimizationDialog, setShowMinimizationDialog] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -174,6 +177,15 @@ export function Controls() {
                 </Button>
               )}
             </div>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowHelpDialog(true)}
+              className="w-full flex items-center justify-center space-x-2"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>ヘルプ</span>
+            </Button>
           </div>
         </div>
       </div>
@@ -181,6 +193,11 @@ export function Controls() {
       <MinimizationDialog 
         isOpen={showMinimizationDialog}
         onClose={() => setShowMinimizationDialog(false)}
+      />
+      
+      <HelpDialog
+        isOpen={showHelpDialog}
+        onClose={() => setShowHelpDialog(false)}
       />
     </div>
   );
