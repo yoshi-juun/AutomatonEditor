@@ -61,16 +61,16 @@ export function State({ state }: StateProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (mode === 'delete') {
-      dispatch({ type: 'DELETE_STATE', payload: state.id });
-      return;
-    }
-
     if (mode === 'accepting') {
       dispatch({
         type: 'UPDATE_STATE',
         payload: { ...state, isAccepting: !state.isAccepting }
       });
+      return;
+    }
+
+    if (mode === 'delete') {
+      dispatch({ type: 'DELETE_STATE', payload: state.id });
       return;
     }
 
@@ -134,7 +134,7 @@ export function State({ state }: StateProps) {
           fill-background
           stroke-primary
           ${mode === 'transition' && selectedStateId === state.id ? 'stroke-[4] stroke-blue-500' : 'stroke-2'}
-          ${state.isAccepting ? 'double-circle' : ''}
+          ${state.isAccepting ? 'stroke-[3]' : ''}
           ${useAutomatonStore.getState().simulation.currentStates.has(state.id) ? 'fill-green-100' : ''}
           ${useAutomatonStore.getState().simulation.isRunning && 
             useAutomatonStore.getState().simulation.step >= useAutomatonStore.getState().simulation.input.length && 
@@ -144,6 +144,12 @@ export function State({ state }: StateProps) {
             useAutomatonStore.getState().simulation.currentStates.has(state.id) && !state.isAccepting ? 'fill-red-200' : ''}
         `}
       />
+      {state.isAccepting && (
+        <circle
+          r="22"
+          className="fill-none stroke-primary stroke-2"
+        />
+      )}
 
       {isEditing ? (
         <foreignObject x="-20" y="-12" width="40" height="24">
