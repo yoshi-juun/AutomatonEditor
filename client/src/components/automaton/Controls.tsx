@@ -30,41 +30,76 @@ export function Controls() {
           onValueChange={(value) => dispatch({ type: 'SET_MODE', payload: value as any })}
           className="grid grid-cols-2 gap-2"
         >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="state" id="state" />
-            <Label htmlFor="state" className="flex items-center space-x-1">
+          <div className="relative">
+            <RadioGroupItem
+              value="state"
+              id="state"
+              className="peer sr-only"
+            />
+            <Label
+              htmlFor="state"
+              className="flex items-center space-x-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+            >
               <Circle className="h-4 w-4" />
               <span>State</span>
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="transition" id="transition" />
-            <Label htmlFor="transition" className="flex items-center space-x-1">
+          <div className="relative">
+            <RadioGroupItem
+              value="transition"
+              id="transition"
+              className="peer sr-only"
+            />
+            <Label
+              htmlFor="transition"
+              className="flex items-center space-x-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+            >
               <ArrowRight className="h-4 w-4" />
               <span>Transition</span>
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="delete" id="delete" />
-            <Label htmlFor="delete" className="flex items-center space-x-1">
+          <div className="relative">
+            <RadioGroupItem
+              value="delete"
+              id="delete"
+              className="peer sr-only"
+            />
+            <Label
+              htmlFor="delete"
+              className="flex items-center space-x-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+            >
               <Trash2 className="h-4 w-4" />
               <span>Delete</span>
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="drag" id="drag" />
-            <Label htmlFor="drag" className="flex items-center space-x-1">
+          <div className="relative">
+            <RadioGroupItem
+              value="drag"
+              id="drag"
+              className="peer sr-only"
+            />
+            <Label
+              htmlFor="drag"
+              className="flex items-center space-x-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+            >
               <Move className="h-4 w-4" />
               <span>Move</span>
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="accepting" id="accepting" />
-            <Label htmlFor="accepting" className="flex items-center space-x-1">
+          <div className="relative">
+            <RadioGroupItem
+              value="accepting"
+              id="accepting"
+              className="peer sr-only"
+            />
+            <Label
+              htmlFor="accepting"
+              className="flex items-center space-x-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+            >
               <Circle className="h-4 w-4" />
               <span>終了状態</span>
             </Label>
