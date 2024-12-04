@@ -2,19 +2,19 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { useAutomatonStore } from "../../lib/automatonStore";
 import { 
   Circle,
   ArrowRight,
   Trash2,
-  Play,
-  Pause,
-  RotateCcw,
   Move
 } from "lucide-react";
 
 export function Controls() {
   const { mode, isNFA, dispatch } = useAutomatonStore();
+  const [regexInput, setRegexInput] = useState('');
 
   return (
     <div className="space-y-6">
@@ -84,28 +84,52 @@ export function Controls() {
 
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">アクション</h2>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Reset to initial state
-                window.location.reload();
-              }}
-              className="w-full"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              リセット
-            </Button>
-            {isNFA && (
+          <div className="space-y-2">
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="regex-input">正規表現</Label>
+              <div className="flex space-x-2">
+                <Input
+                  id="regex-input"
+                  placeholder="(a|b)*abb"
+                  value={regexInput}
+                  onChange={(e) => setRegexInput(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (regexInput) {
+                      dispatch({ type: 'CONVERT_REGEX', payload: regexInput });
+                    }
+                  }}
+                >
+                  変換
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                使用可能な演算子: | (和), * (繰り返し), () (グループ化)
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
-                onClick={() => dispatch({ type: 'CONVERT_TO_DFA' })}
+                onClick={() => {
+                  window.location.reload();
+                }}
                 className="w-full"
               >
-                <ArrowRight className="h-4 w-4 mr-2" />
-                DFAに変換
+                リセット
               </Button>
-            )}
+              {isNFA && (
+                <Button
+                  variant="outline"
+                  onClick={() => dispatch({ type: 'CONVERT_TO_DFA' })}
+                  className="w-full"
+                >
+                  DFAに変換
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

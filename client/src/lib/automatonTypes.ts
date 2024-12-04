@@ -54,4 +54,5 @@ export type AutomatonAction =
   | { type: 'STEP_SIMULATION' }
   | { type: 'STOP_SIMULATION' }
   | { type: 'SET_NFA_MODE'; payload: boolean }
-  | { type: 'CONVERT_TO_DFA' };
+  | { type: 'CONVERT_TO_DFA' }
+  | { type: 'CONVERT_REGEX'; payload: string };

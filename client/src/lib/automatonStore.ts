@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AutomatonState, AutomatonAction, State, Transition } from './automatonTypes';
 import { generateId } from './automatonUtils';
+import { RegexConverter } from './regexConverter';
 
 const initialState: AutomatonState = {
   automaton: {
@@ -313,6 +314,33 @@ export const useAutomatonStore = create<
           } catch (error) {
             console.error('DFA変換中にエラーが発生しました:', error);
             alert('DFA変換中にエラーが発生しました。');
+            return state;
+          }
+        });
+        break;
+
+      case 'CONVERT_REGEX':
+        set((state: AutomatonState) => {
+          try {
+            const converter = new RegexConverter();
+            const { states, transitions } = converter.convert(action.payload);
+            
+            return {
+              ...state,
+              isNFA: true,
+              automaton: {
+                ...state.automaton,
+                type: 'NFA',
+                states,
+                transitions,
+                alphabet: new Set(transitions
+                  .map(t => t.input)
+                  .filter(input => input !== 'ε')
+                )
+              }
+            };
+          } catch (error) {
+            console.error('正規表現の変換中にエラーが発生しました:', error);
             return state;
           }
         });
