@@ -76,8 +76,21 @@ export function State({ state }: StateProps) {
 
     if (mode === 'transition') {
       if (selectedStateId === null) {
+        // 最初のクリック：状態を選択
         dispatch({ type: 'SELECT_STATE', payload: state.id });
+      } else if (selectedStateId === state.id) {
+        // 同じ状態を2回クリック：セルフループを作成
+        dispatch({
+          type: 'ADD_TRANSITION',
+          payload: {
+            from: state.id,
+            to: state.id,
+            input: '0'
+          }
+        });
+        dispatch({ type: 'SELECT_STATE', payload: null });
       } else if (selectedStateId !== state.id) {
+        // 異なる状態をクリック：通常の遷移を作成
         dispatch({
           type: 'ADD_TRANSITION',
           payload: {
