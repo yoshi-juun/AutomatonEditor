@@ -162,6 +162,15 @@ export function Controls() {
                   DFAに変換
                 </Button>
               )}
+              {!isNFA && (
+                <Button
+                  variant="outline"
+                  onClick={() => dispatch({ type: 'MINIMIZE_DFA' })}
+                  className="w-full"
+                >
+                  DFAを最小化
+                </Button>
+              )}
             </div>
           </div>
         </div>

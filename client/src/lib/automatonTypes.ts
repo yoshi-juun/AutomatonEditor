@@ -57,4 +57,5 @@ export type AutomatonAction =
   | { type: 'CONVERT_TO_DFA' }
   | { type: 'CONVERT_REGEX'; payload: string }
   | { type: 'IMPORT_AUTOMATON'; payload: { format: 'json' | 'dot'; content: string } }
-  | { type: 'EXPORT_AUTOMATON' };
+  | { type: 'EXPORT_AUTOMATON' }
+  | { type: 'MINIMIZE_DFA' };

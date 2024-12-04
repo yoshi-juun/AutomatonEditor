@@ -387,6 +387,138 @@ export const useAutomatonStore = create<
           }
         });
         break;
+
+      case 'MINIMIZE_DFA':
+        set((state: AutomatonState) => {
+          if (state.isNFA || state.automaton.type !== 'DFA') {
+            alert('最小化はDFAのみで実行可能です。');
+            return state;
+          }
+
+          try {
+            const { states, transitions, alphabet } = state.automaton;
+
+            // 1. 到達可能な状態の特定
+            const reachableStates = new Set<string>();
+            const queue = [states.find(s => s.isInitial)?.id];
+            while (queue.length > 0) {
+              const currentId = queue.shift()!;
+              if (!reachableStates.has(currentId)) {
+                reachableStates.add(currentId);
+                transitions
+                  .filter(t => t.from === currentId)
+                  .forEach(t => queue.push(t.to));
+              }
+            }
+
+            // 到達不能な状態を除外
+            const filteredStates = states.filter(s => reachableStates.has(s.id));
+            const filteredTransitions = transitions.filter(t => 
+              reachableStates.has(t.from) && reachableStates.has(t.to)
+            );
+
+            // 2. 等価な状態の特定
+            let partition = [
+              filteredStates.filter(s => s.isAccepting).map(s => s.id),
+              filteredStates.filter(s => !s.isAccepting).map(s => s.id)
+            ].filter(group => group.length > 0);
+
+            let changed = true;
+            while (changed) {
+              changed = false;
+              const newPartition: string[][] = [];
+
+              for (const group of partition) {
+                const subgroups = new Map<string, string[]>();
+
+                for (const stateId of group) {
+                  const signature = Array.from(alphabet).map(input => {
+                    const transition = filteredTransitions.find(t => 
+                      t.from === stateId && t.input === input
+                    );
+                    if (!transition) return 'none';
+                    return partition.findIndex(p => p.includes(transition.to)).toString();
+                  }).join(',');
+
+                  if (!subgroups.has(signature)) {
+                    subgroups.set(signature, []);
+                  }
+                  subgroups.get(signature)!.push(stateId);
+                }
+
+                if (subgroups.size > 1) {
+                  changed = true;
+                  newPartition.push(...Array.from(subgroups.values()));
+                } else {
+                  newPartition.push(group);
+                }
+              }
+
+              partition = newPartition;
+            }
+
+            // 3. 新しい状態集合の作成
+            const newStates: State[] = partition.map((group, i) => {
+              const originalState = filteredStates.find(s => s.id === group[0])!;
+              return {
+                id: `min_${i}`,
+                name: `q${i}`,
+                position: {
+                  x: 100 + (i % 3) * 150,
+                  y: 100 + Math.floor(i / 3) * 150
+                },
+                isInitial: group.some(id => 
+                  filteredStates.find(s => s.id === id)?.isInitial
+                ),
+                isAccepting: group.some(id => 
+                  filteredStates.find(s => s.id === id)?.isAccepting
+                )
+              };
+            });
+
+            // 4. 新しい遷移の作成
+            const newTransitions: Transition[] = [];
+            for (const [groupIndex, group] of partition.entries()) {
+              const representativeId = group[0];
+              const fromStateId = `min_${groupIndex}`;
+
+              for (const input of alphabet) {
+                const originalTransition = filteredTransitions.find(t => 
+                  t.from === representativeId && t.input === input
+                );
+                
+                if (originalTransition) {
+                  const toGroupIndex = partition.findIndex(p => 
+                    p.includes(originalTransition.to)
+                  );
+                  
+                  if (toGroupIndex !== -1) {
+                    newTransitions.push({
+                      id: generateId(),
+                      from: fromStateId,
+                      to: `min_${toGroupIndex}`,
+                      input
+                    });
+                  }
+                }
+              }
+            }
+
+            return {
+              ...state,
+              automaton: {
+                ...state.automaton,
+                states: newStates,
+                transitions: newTransitions
+              }
+            };
+          } catch (error) {
+            console.error('DFA最小化中にエラーが発生しました:', error);
+            alert('DFA最小化中にエラーが発生しました。');
+            return state;
+          }
+        });
+        break;
     }
   }
 }));
