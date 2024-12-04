@@ -9,7 +9,18 @@ interface StateProps {
 
 export function State({ state }: StateProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const { mode, selectedStateId, dispatch } = useAutomatonStore();
+  const { 
+    mode, 
+    selectedStateId, 
+    dispatch,
+    simulation: { currentStates, step, input, isRunning }
+  } = useAutomatonStore(state => ({
+    mode: state.mode,
+    selectedStateId: state.selectedStateId,
+    dispatch: state.dispatch,
+    simulation: state.simulation
+  }));
+  
   const stateRef = useRef<SVGGElement>(null);
 
   const handleDragStart = (e: React.MouseEvent) => {
@@ -21,13 +32,11 @@ export function State({ state }: StateProps) {
     const ctm = svg.getScreenCTM();
     if (!ctm) return;
 
-    // マウスの初期位置を記録
     const point = svg.createSVGPoint();
     point.x = e.clientX;
     point.y = e.clientY;
     const svgPoint = point.matrixTransform(ctm.inverse());
 
-    // ドラッグオフセットを計算
     const offsetX = svgPoint.x - state.position.x;
     const offsetY = svgPoint.y - state.position.y;
 
@@ -76,10 +85,8 @@ export function State({ state }: StateProps) {
 
     if (mode === 'transition') {
       if (selectedStateId === null) {
-        // 最初のクリック：状態を選択
         dispatch({ type: 'SELECT_STATE', payload: state.id });
       } else if (selectedStateId === state.id) {
-        // 同じ状態を2回クリック：セルフループを作成
         dispatch({
           type: 'ADD_TRANSITION',
           payload: {
@@ -90,7 +97,6 @@ export function State({ state }: StateProps) {
         });
         dispatch({ type: 'SELECT_STATE', payload: null });
       } else if (selectedStateId !== state.id) {
-        // 異なる状態をクリック：通常の遷移を作成
         dispatch({
           type: 'ADD_TRANSITION',
           payload: {
@@ -121,7 +127,10 @@ export function State({ state }: StateProps) {
     setIsEditing(false);
   };
 
-  
+  const isCurrentState = currentStates.has(state.id);
+  const isSimulationComplete = step >= input.length;
+  const isAcceptingState = isCurrentState && state.isAccepting;
+  const isNonAcceptingState = isCurrentState && !state.isAccepting;
 
   return (
     <g
@@ -130,7 +139,6 @@ export function State({ state }: StateProps) {
       onClick={handleClick}
       onMouseDown={handleDragStart}
       onDoubleClick={handleDoubleClick}
-      
       className="cursor-move"
     >
       {state.isInitial && (
@@ -148,15 +156,12 @@ export function State({ state }: StateProps) {
           stroke-primary
           ${mode === 'transition' && selectedStateId === state.id ? 'stroke-[4] stroke-blue-500' : 'stroke-2'}
           ${state.isAccepting ? 'stroke-[3]' : ''}
-          ${useAutomatonStore.getState().simulation.currentStates.has(state.id) ? 'fill-green-100' : ''}
-          ${useAutomatonStore.getState().simulation.isRunning && 
-            useAutomatonStore.getState().simulation.step >= useAutomatonStore.getState().simulation.input.length && 
-            useAutomatonStore.getState().simulation.currentStates.has(state.id) && state.isAccepting ? 'fill-green-200' : ''}
-          ${useAutomatonStore.getState().simulation.isRunning && 
-            useAutomatonStore.getState().simulation.step >= useAutomatonStore.getState().simulation.input.length && 
-            useAutomatonStore.getState().simulation.currentStates.has(state.id) && !state.isAccepting ? 'fill-red-200' : ''}
+          ${isCurrentState ? 'fill-green-100' : ''}
+          ${isSimulationComplete && isAcceptingState ? 'fill-green-200' : ''}
+          ${isRunning && isSimulationComplete && isNonAcceptingState ? 'fill-red-200' : ''}
         `}
       />
+      
       {state.isAccepting && (
         <circle
           r="22"
