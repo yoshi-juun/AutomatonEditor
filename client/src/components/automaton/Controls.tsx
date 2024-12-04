@@ -258,10 +258,10 @@ export function Controls() {
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-4 right-4 rounded-full"
+        className="fixed bottom-4 right-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
         onClick={() => setShowHelpDialog(true)}
       >
-        <HelpCircle className="h-5 w-5" />
+        <HelpCircle className="h-6 w-6" />
       </Button>
     </div>
   );
