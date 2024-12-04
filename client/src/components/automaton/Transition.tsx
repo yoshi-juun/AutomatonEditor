@@ -121,15 +121,35 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
                   <DropdownMenuItem
                     key={input}
                     onClick={() => {
+                      // 既存の遷移をチェック
+                      const existingTransition = automaton.transitions.find(t => 
+                        t.id !== transition.id && 
+                        t.from === transition.from && 
+                        t.to === transition.to && 
+                        t.input === input
+                      );
+
+                      if (existingTransition) {
+                        alert('同じ状態間の同じ入力による遷移が既に存在します。');
+                        return;
+                      }
+
                       if (automaton.type === 'NFA') {
                         const currentInputs = transition.input.split(',').map(i => i.trim());
-                        const newInputs = currentInputs.includes(input)
-                          ? currentInputs.filter(i => i !== input)
-                          : [...currentInputs, input];
-                        dispatch({
-                          type: 'UPDATE_TRANSITION',
-                          payload: { ...transition, input: newInputs.join(', ') }
-                        });
+                        // 入力値の重複をチェック
+                        if (currentInputs.includes(input)) {
+                          const newInputs = currentInputs.filter(i => i !== input);
+                          dispatch({
+                            type: 'UPDATE_TRANSITION',
+                            payload: { ...transition, input: newInputs.join(', ') }
+                          });
+                        } else {
+                          // 新しい入力を追加
+                          dispatch({
+                            type: 'UPDATE_TRANSITION',
+                            payload: { ...transition, input: [...currentInputs, input].join(', ') }
+                          });
+                        }
                       } else {
                         dispatch({
                           type: 'UPDATE_TRANSITION',

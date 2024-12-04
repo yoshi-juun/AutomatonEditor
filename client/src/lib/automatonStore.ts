@@ -83,16 +83,31 @@ export const useAutomatonStore = create<
 
       case 'ADD_TRANSITION':
         set((state: AutomatonState) => {
+          // 既存の遷移をチェック
+          const existingTransition = state.automaton.transitions.find(t => 
+            t.from === action.payload.from && 
+            t.to === action.payload.to && 
+            t.input === action.payload.input
+          );
+
+          // 同じ遷移が存在する場合は状態を変更しない
+          if (existingTransition) {
+            alert('同じ状態間の同じ入力による遷移が既に存在します。');
+            return state;
+          }
+
           const newTransition: Transition = {
             id: generateId(),
             ...action.payload
           };
+
+          // 新しい遷移を追加
           return {
             ...state,
             automaton: {
               ...state.automaton,
               transitions: [...state.automaton.transitions, newTransition],
-              alphabet: new Set([...state.automaton.alphabet, action.payload.input])
+              alphabet: new Set([...state.automaton.alphabet, ...action.payload.input.split(',').map(i => i.trim())])
             }
           };
         });
