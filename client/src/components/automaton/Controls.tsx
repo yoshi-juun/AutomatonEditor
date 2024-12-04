@@ -3,13 +3,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { useState } from "react";
 import { useAutomatonStore } from "../../lib/automatonStore";
 import { MinimizationDialog } from "./MinimizationDialog";
@@ -17,16 +10,13 @@ import {
   Circle,
   ArrowRight,
   Trash2,
-  Move,
-  HelpCircle,
-  Info
+  Move
 } from "lucide-react";
 
 export function Controls() {
   const { mode, isNFA, dispatch } = useAutomatonStore();
   const [regexInput, setRegexInput] = useState('');
   const [showMinimizationDialog, setShowMinimizationDialog] = useState(false);
-  const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -192,77 +182,6 @@ export function Controls() {
         isOpen={showMinimizationDialog}
         onClose={() => setShowMinimizationDialog(false)}
       />
-
-      {/* ヘルプダイアログ */}
-      <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>オートマトンエディタの使い方</DialogTitle>
-            <DialogDescription>
-              このエディタを使用して有限オートマトンの作成、編集、シミュレーションを行うことができます。
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2 flex items-center">
-                <Circle className="h-4 w-4 mr-2" />
-                状態の操作
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>状態モード（State）で空白部分をクリックして新しい状態を追加</li>
-                <li>状態をダブルクリックして名前を編集</li>
-                <li>終了状態モードで状態をクリックして受理/非受理状態を切り替え</li>
-                <li>移動モード（Move）で状態をドラッグして位置を調整</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2 flex items-center">
-                <ArrowRight className="h-4 w-4 mr-2" />
-                遷移の操作
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>遷移モード（Transition）で始点の状態をクリック</li>
-                <li>続いて終点の状態をクリックして遷移を作成</li>
-                <li>遷移ラベルをクリックして入力記号を選択または編集</li>
-                <li>NFAモードでは複数の入力記号をカンマ区切りで指定可能</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2 flex items-center">
-                <Info className="h-4 w-4 mr-2" />
-                高度な機能
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>正規表現からNFAを自動生成（対応演算子: |, *, (), ε）</li>
-                <li>NFAからDFAへの変換（等価な決定性オートマトンを生成）</li>
-                <li>DFAの最小化（冗長な状態を削除して最小のDFAを生成）</li>
-                <li>JSONファイルでのインポート/エクスポート</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">シミュレーション</h3>
-              <p className="text-sm">
-                入力文字列を入力して実行ボタンを押すと、オートマトンがその文字列を受理するかどうかをステップバイステップで確認できます。
-                各ステップで現在の状態が強調表示され、最終的に受理状態で停止すれば入力文字列は受理されます。
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* ヘルプボタン */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed bottom-4 right-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
-        onClick={() => setShowHelpDialog(true)}
-      >
-        <HelpCircle className="h-6 w-6" />
-      </Button>
     </div>
   );
 }

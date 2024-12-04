@@ -20,7 +20,7 @@ interface TransitionProps {
 export function Transition({ transition, fromState, toState }: TransitionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const pathRef = useRef<SVGPathElement>(null);
-  const { mode, selectedTransitionId, automaton, simulation, dispatch } = useAutomatonStore();
+  const { mode, selectedTransitionId, automaton, dispatch } = useAutomatonStore();
   
   // 必要な状態が存在しない場合は何も描画しない
   if (!fromState || !toState || !automaton || !dispatch) {
@@ -85,10 +85,8 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
           fill-none
           stroke-primary
           stroke-2
-          transition-all
-          duration-300
-          ${selectedTransitionId === transition.id ? 'stroke-[3] shadow-[0_0_10px_rgba(59,130,246,0.5)]' : ''}
-          ${simulation?.currentStates?.has(fromState.id) ? 'stroke-green-500 shadow-[0_0_10px_rgba(0,255,0,0.3)]' : ''}
+          transition-colors
+          ${selectedTransitionId === transition.id ? 'stroke-[3]' : ''}
         `}
         markerEnd="url(#arrowhead)"
         onClick={handleClick}

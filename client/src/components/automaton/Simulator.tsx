@@ -206,14 +206,8 @@ export function Simulator() {
 
           {(simulation.step >= simulation.input.length || simulation.currentStates.size === 0) && (
             <div 
-              className={`mt-2 p-4 rounded-lg transition-all duration-300 ${
-                isAccepting 
-                  ? 'bg-green-100 dark:bg-green-900/20 shadow-[0_0_15px_rgba(0,255,0,0.1)]' 
-                  : 'bg-red-100 dark:bg-red-900/20 shadow-[0_0_15px_rgba(255,0,0,0.1)]'
-              } border ${
-                isAccepting 
-                  ? 'border-green-200 dark:border-green-800' 
-                  : 'border-red-200 dark:border-red-800'
+              className={`mt-2 p-3 rounded-lg transition-colors duration-200 ${
+                isAccepting ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
               }`}
             >
               <div 
