@@ -189,7 +189,11 @@ export const useAutomatonStore = create<
           
           state.simulation.currentStates.forEach((stateId: string) => {
             state.automaton.transitions
-              .filter(t => t.from === stateId && t.input === currentChar)
+              .filter(t => {
+                // カンマ区切りの入力値を配列に分割して処理
+                const inputs = t.input.split(',').map(i => i.trim());
+                return t.from === stateId && inputs.includes(currentChar);
+              })
               .forEach(t => nextStates.add(t.to));
           });
 
@@ -212,7 +216,7 @@ export const useAutomatonStore = create<
               ...state.simulation,
               currentStates: nextStates,
               step: state.simulation.step + 1,
-              isRunning: true // 常にtrueを維持
+              isRunning: true
             }
           };
         });
