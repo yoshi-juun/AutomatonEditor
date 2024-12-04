@@ -376,14 +376,9 @@ export const useAutomatonStore = create<
       case 'EXPORT_AUTOMATON':
         set((state: AutomatonState) => {
           try {
-            // JSON形式でエクスポート
+            // JSON形式でのみエクスポート
             const jsonContent = exportToJSON(state.automaton);
             downloadFile(jsonContent, `automaton_${Date.now()}.json`);
-
-            // DOT形式でエクスポート
-            const dotContent = exportToDOT(state.automaton);
-            downloadFile(dotContent, `automaton_${Date.now()}.dot`);
-
             return state;
           } catch (error) {
             console.error('オートマトンのエクスポート中にエラーが発生しました:', error);

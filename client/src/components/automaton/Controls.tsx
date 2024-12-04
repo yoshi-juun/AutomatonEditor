@@ -119,14 +119,13 @@ export function Controls() {
                   onClick={() => {
                     const fileInput = document.createElement('input');
                     fileInput.type = 'file';
-                    fileInput.accept = '.json,.dot';
+                    fileInput.accept = '.json';
                     fileInput.onchange = async (e) => {
                       const file = (e.target as HTMLInputElement).files?.[0];
                       if (!file) return;
                       
                       const text = await file.text();
-                      const format = file.name.endsWith('.json') ? 'json' : 'dot';
-                      dispatch({ type: 'IMPORT_AUTOMATON', payload: { format, content: text } });
+                      dispatch({ type: 'IMPORT_AUTOMATON', payload: { format: 'json', content: text } });
                     };
                     fileInput.click();
                   }}
