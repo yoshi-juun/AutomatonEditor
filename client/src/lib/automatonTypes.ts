@@ -55,4 +55,6 @@ export type AutomatonAction =
   | { type: 'STOP_SIMULATION' }
   | { type: 'SET_NFA_MODE'; payload: boolean }
   | { type: 'CONVERT_TO_DFA' }
-  | { type: 'CONVERT_REGEX'; payload: string };
+  | { type: 'CONVERT_REGEX'; payload: string }
+  | { type: 'IMPORT_AUTOMATON'; payload: { format: 'json' | 'dot'; content: string } }
+  | { type: 'EXPORT_AUTOMATON' };

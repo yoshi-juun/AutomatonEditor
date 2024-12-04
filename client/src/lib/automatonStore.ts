@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { AutomatonState, AutomatonAction, State, Transition } from './automatonTypes';
 import { generateId } from './automatonUtils';
 import { RegexConverter } from './regexConverter';
+import { 
+  exportToJSON,
+  importFromJSON,
+  exportToDOT,
+  importFromDOT,
+  downloadFile
+} from './formatConverters';
 
 const initialState: AutomatonState = {
   automaton: {
@@ -341,6 +348,46 @@ export const useAutomatonStore = create<
             };
           } catch (error) {
             console.error('正規表現の変換中にエラーが発生しました:', error);
+            return state;
+          }
+        });
+        break;
+
+      case 'IMPORT_AUTOMATON':
+        set((state: AutomatonState) => {
+          try {
+            const automaton = action.payload.format === 'json'
+              ? importFromJSON(action.payload.content)
+              : importFromDOT(action.payload.content);
+
+            return {
+              ...state,
+              isNFA: automaton.type === 'NFA',
+              automaton
+            };
+          } catch (error) {
+            console.error('オートマトンのインポート中にエラーが発生しました:', error);
+            alert('ファイルの形式が正しくないか、破損している可能性があります。');
+            return state;
+          }
+        });
+        break;
+
+      case 'EXPORT_AUTOMATON':
+        set((state: AutomatonState) => {
+          try {
+            // JSON形式でエクスポート
+            const jsonContent = exportToJSON(state.automaton);
+            downloadFile(jsonContent, `automaton_${Date.now()}.json`);
+
+            // DOT形式でエクスポート
+            const dotContent = exportToDOT(state.automaton);
+            downloadFile(dotContent, `automaton_${Date.now()}.dot`);
+
+            return state;
+          } catch (error) {
+            console.error('オートマトンのエクスポート中にエラーが発生しました:', error);
+            alert('エクスポート中にエラーが発生しました。');
             return state;
           }
         });

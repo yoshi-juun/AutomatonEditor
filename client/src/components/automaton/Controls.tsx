@@ -110,6 +110,40 @@ export function Controls() {
                 使用可能な演算子: | (和), * (繰り返し), () (グループ化)
               </p>
             </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">インポート/エクスポート</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = '.json,.dot';
+                    fileInput.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (!file) return;
+                      
+                      const text = await file.text();
+                      const format = file.name.endsWith('.json') ? 'json' : 'dot';
+                      dispatch({ type: 'IMPORT_AUTOMATON', payload: { format, content: text } });
+                    };
+                    fileInput.click();
+                  }}
+                  className="w-full"
+                >
+                  インポート
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => dispatch({ type: 'EXPORT_AUTOMATON' })}
+                  className="w-full"
+                >
+                  エクスポート
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
