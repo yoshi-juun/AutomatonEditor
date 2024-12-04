@@ -83,17 +83,6 @@ export const useAutomatonStore = create<
 
       case 'ADD_TRANSITION':
         set((state: AutomatonState) => {
-          // DFAモードの場合、重複遷移をチェック
-          if (!state.isNFA) {
-            const existingTransition = state.automaton.transitions.find(t => 
-              t.from === action.payload.from && t.input === action.payload.input
-            );
-            if (existingTransition) {
-              alert('DFAモードでは、同じ状態から同じ入力記号による複数の遷移は許可されません。');
-              return state;
-            }
-          }
-
           const newTransition: Transition = {
             id: generateId(),
             ...action.payload
@@ -121,19 +110,6 @@ export const useAutomatonStore = create<
 
       case 'UPDATE_TRANSITION':
         set((state: AutomatonState) => {
-          // DFAモードで重複遷移をチェック
-          if (!state.isNFA) {
-            const existingTransition = state.automaton.transitions.find(t => 
-              t.from === action.payload.from && 
-              t.input === action.payload.input && 
-              t.id !== action.payload.id
-            );
-            if (existingTransition) {
-              alert('DFAモードでは、同じ状態から同じ入力記号による複数の遷移は許可されません。');
-              return state;
-            }
-          }
-
           // 古い遷移を探す
           const oldTransition = state.automaton.transitions.find(t => t.id === action.payload.id);
           
