@@ -89,8 +89,11 @@ export function Simulator() {
       </div>
 
       {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2">
+          <AlertDescription className="flex items-center space-x-2">
+            <span className="font-medium">エラー:</span>
+            <span>{error}</span>
+          </AlertDescription>
         </Alert>
       )}
 
@@ -131,27 +134,59 @@ export function Simulator() {
           <div className="text-sm font-medium">
             Step: {simulation.step} / {simulation.input.length}
           </div>
-          <div className="text-sm">
-            Current states: {Array.from(simulation.currentStates).map(id => {
-              const state = automaton.states.find(s => s.id === id);
-              return state?.name;
-            }).join(', ') || 'None'}
-          </div>
-          {simulation.step >= simulation.input.length && (
-            <div className="mt-2 p-2 rounded">
-              {isAccepting() ? (
-                <div className="text-green-600 font-medium">入力文字列は受理されました</div>
-              ) : (
-                <div className="text-red-600 font-medium">入力文字列は受理されませんでした</div>
-              )}
+          <div className="space-y-2 p-4 border rounded-lg bg-card">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">現在の状態:</span>
+              <span className="text-sm bg-accent px-2 py-1 rounded">
+                {Array.from(simulation.currentStates).map(id => {
+                  const state = automaton.states.find(s => s.id === id);
+                  return state?.name;
+                }).join(', ') || 'なし'}
+              </span>
             </div>
-          )}
-          <div className={`text-sm font-medium ${
-            simulation.step >= simulation.input.length
-              ? (isAccepting() ? 'text-green-600' : 'text-red-600')
-              : ''
-          }`}>
-            {getSimulationStatus()}
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">入力記号:</span>
+              <span className="text-sm font-mono bg-accent px-2 py-1 rounded">
+                {simulation.step < simulation.input.length ? simulation.input[simulation.step] : '完了'}
+              </span>
+            </div>
+
+            {simulation.input && (
+              <div className="flex items-center space-x-1 overflow-x-auto py-2">
+                {simulation.input.split('').map((char, i) => (
+                  <div
+                    key={i}
+                    className={`
+                      flex-shrink-0 w-8 h-8 flex items-center justify-center rounded
+                      ${i === simulation.step ? 'bg-primary text-primary-foreground' :
+                        i < simulation.step ? 'bg-muted text-muted-foreground' :
+                        'border border-border'
+                      }
+                      transition-all duration-200
+                    `}
+                  >
+                    {char}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {simulation.step >= simulation.input.length && (
+              <div className={`mt-2 p-3 rounded-lg ${
+                isAccepting() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
+              }`}>
+                <div className={`flex items-center justify-center text-sm font-medium ${
+                  isAccepting() ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+                }`}>
+                  {isAccepting() ? (
+                    <>✓ 入力文字列は受理されました</>
+                  ) : (
+                    <>✕ 入力文字列は受理されませんでした</>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
