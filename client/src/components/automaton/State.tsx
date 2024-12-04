@@ -128,8 +128,16 @@ export function State({ state }: StateProps) {
   const getStateStyle = () => {
     if (!isCurrentState) return '';
     if (!simulation.isRunning) return '';
-    if (!isSimulationComplete) return 'fill-green-100';
-    return isAcceptingState ? 'fill-green-200' : 'fill-red-200';
+    
+    let baseStyle = 'transition-colors duration-300 ';
+    if (!isSimulationComplete) {
+      baseStyle += 'fill-green-100 dark:fill-green-900/30 shadow-[0_0_15px_rgba(0,255,0,0.3)]';
+    } else {
+      baseStyle += isAcceptingState 
+        ? 'fill-green-200 dark:fill-green-900/50 shadow-[0_0_15px_rgba(0,255,0,0.5)]'
+        : 'fill-red-200 dark:fill-red-900/50 shadow-[0_0_15px_rgba(255,0,0,0.5)]';
+    }
+    return baseStyle;
   };
 
   return (

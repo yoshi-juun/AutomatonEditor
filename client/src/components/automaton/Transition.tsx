@@ -85,8 +85,10 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
           fill-none
           stroke-primary
           stroke-2
-          transition-colors
-          ${selectedTransitionId === transition.id ? 'stroke-[3]' : ''}
+          transition-all
+          duration-300
+          ${selectedTransitionId === transition.id ? 'stroke-[3] shadow-[0_0_10px_rgba(59,130,246,0.5)]' : ''}
+          ${simulation?.currentStates?.has(fromState.id) ? 'stroke-green-500 shadow-[0_0_10px_rgba(0,255,0,0.3)]' : ''}
         `}
         markerEnd="url(#arrowhead)"
         onClick={handleClick}
