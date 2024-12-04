@@ -138,10 +138,12 @@ export function Simulator() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">現在の状態:</span>
               <span className="text-sm bg-accent px-2 py-1 rounded">
-                {Array.from(simulation.currentStates).map(id => {
-                  const state = automaton.states.find(s => s.id === id);
-                  return state?.name;
-                }).join(', ') || 'なし'}
+                {simulation.currentStates.size > 0 
+                  ? Array.from(simulation.currentStates).map(id => {
+                      const state = automaton.states.find(s => s.id === id);
+                      return state?.name;
+                    }).join(', ')
+                  : '初期状態'}
               </span>
             </div>
             

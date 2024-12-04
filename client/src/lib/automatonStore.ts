@@ -191,10 +191,18 @@ export const useAutomatonStore = create<
         break;
 
       case 'STOP_SIMULATION':
-        set((state: AutomatonState) => ({
-          ...state,
-          simulation: { ...initialState.simulation }
-        }));
+        set((state: AutomatonState) => {
+          // シミュレーション状態のみをリセット
+          return {
+            ...state,
+            simulation: {
+              input: '',
+              currentStates: new Set<string>(),
+              step: 0,
+              isRunning: false
+            }
+          };
+        });
         break;
 
       case 'SET_NFA_MODE':
