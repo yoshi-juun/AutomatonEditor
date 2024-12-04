@@ -109,7 +109,7 @@ export function Controls() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                使用可能な演算子: | (和), * (繰り返し), () (グループ化)
+                使用可能な演算子: | (和), * (繰り返し), () (グループ化), ε (空文字)
               </p>
             </div>
             

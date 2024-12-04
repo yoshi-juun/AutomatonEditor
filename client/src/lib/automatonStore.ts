@@ -186,16 +186,40 @@ export const useAutomatonStore = create<
           
           const currentChar = state.simulation.input[state.simulation.step];
           const nextStates = new Set<string>();
+          const epsilonClosure = new Set<string>();
           
-          state.simulation.currentStates.forEach((stateId: string) => {
+          // ε遷移による到達可能な状態を収集する関数
+          const collectEpsilonClosure = (stateId: string) => {
+            if (epsilonClosure.has(stateId)) return;
+            epsilonClosure.add(stateId);
+            
+            state.automaton.transitions
+              .filter(t => t.from === stateId && t.input === 'ε')
+              .forEach(t => collectEpsilonClosure(t.to));
+          };
+          
+          // 現在の状態からε遷移で到達可能な全状態を収集
+          state.simulation.currentStates.forEach(stateId => {
+            collectEpsilonClosure(stateId);
+          });
+          
+          // ε遷移で到達可能な各状態から、現在の入力文字による遷移を収集
+          epsilonClosure.forEach(stateId => {
             state.automaton.transitions
               .filter(t => {
-                // カンマ区切りの入力値を配列に分割して処理
                 const inputs = t.input.split(',').map(i => i.trim());
                 return t.from === stateId && inputs.includes(currentChar);
               })
               .forEach(t => nextStates.add(t.to));
           });
+          
+          // 遷移後の状態からさらにε遷移で到達可能な状態を収集
+          const finalStates = new Set<string>();
+          nextStates.forEach(stateId => {
+            collectEpsilonClosure(stateId);
+            finalStates.add(stateId);
+          });
+          epsilonClosure.forEach(stateId => finalStates.add(stateId));
 
           // 次の状態がない場合は非受理として停止
           if (nextStates.size === 0) {
@@ -214,7 +238,7 @@ export const useAutomatonStore = create<
             ...state,
             simulation: {
               ...state.simulation,
-              currentStates: nextStates,
+              currentStates: finalStates,
               step: state.simulation.step + 1,
               isRunning: true
             }

@@ -112,7 +112,7 @@ export function Transition({ transition, fromState, toState }: TransitionProps) 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-24">
-              {Array.from(automaton.alphabet).map((input) => {
+              {[...Array.from(automaton.alphabet), 'ε'].map((input) => {
                 // NFAモードでは複数入力を許可（カンマ区切り）
                 const currentInputs = transition.input.split(',').map(i => i.trim());
                 const isSelected = currentInputs.includes(input);
