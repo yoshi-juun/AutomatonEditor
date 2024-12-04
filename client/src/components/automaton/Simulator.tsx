@@ -1,35 +1,43 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAutomatonStore } from '../../lib/automatonStore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Play, Pause, SkipForward, RotateCcw } from "lucide-react";
+import { Play, SkipForward, RotateCcw } from "lucide-react";
 
 export function Simulator() {
   const [inputString, setInputString] = useState('');
-  const { automaton, simulation, dispatch } = useAutomatonStore();
   const [error, setError] = useState<string | null>(null);
 
-  const validateInput = (input: string): boolean => {
-    const isValidChar = (char: string) => automaton.alphabet.has(char);
-    return input.split('').every(isValidChar);
-  };
+  // 必要な状態のみを選択的に取得
+  const alphabet = useAutomatonStore(state => state.automaton.alphabet);
+  const states = useAutomatonStore(state => state.automaton.states);
+  const simulation = useAutomatonStore(state => state.simulation);
+  const dispatch = useAutomatonStore(state => state.dispatch);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // メモ化された検証関数
+  const validateInput = useCallback((input: string): boolean => {
+    const validSymbols = Array.from(alphabet).flatMap(s => s.split(',').map(i => i.trim()));
+    return input.split('').every(char => validSymbols.includes(char));
+  }, [alphabet]);
+
+  // 入力ハンドラー
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newInput = e.target.value;
     setInputString(newInput);
     setError(null);
-  };
+  }, []);
 
-  const handleStart = () => {
+  // シミュレーション開始
+  const handleStart = useCallback(() => {
     if (!inputString) {
       setError('入力文字列を入力してください');
       return;
     }
 
     const inputSymbols = inputString.split('').filter(char => char !== ' ');
-    const validSymbols = Array.from(automaton.alphabet).flatMap(s => s.split(',').map(i => i.trim()));
+    const validSymbols = Array.from(alphabet).flatMap(s => s.split(',').map(i => i.trim()));
     
     const invalidSymbols = inputSymbols.filter(symbol => !validSymbols.includes(symbol));
     if (invalidSymbols.length > 0) {
@@ -39,39 +47,39 @@ export function Simulator() {
     }
 
     dispatch({ type: 'START_SIMULATION', payload: inputString });
-  };
+  }, [inputString, alphabet, dispatch]);
 
-  const handleStep = () => {
+  // シミュレーションステップ実行
+  const handleStep = useCallback(() => {
     dispatch({ type: 'STEP_SIMULATION' });
-  };
+  }, [dispatch]);
 
-  const handleStop = () => {
+  // シミュレーション停止
+  const handleStop = useCallback(() => {
     dispatch({ type: 'STOP_SIMULATION' });
     setInputString('');
     setError(null);
-  };
+  }, [dispatch]);
 
-  const isAccepting = () => {
-    const hasAcceptingState = automaton.states.some(s => s.isAccepting);
+  // メモ化された受理状態チェック
+  const isAccepting = useMemo(() => {
+    const hasAcceptingState = states.some(s => s.isAccepting);
     if (!hasAcceptingState) {
-      setError('受理状態が設定されていません。状態を右クリックして受理状態を設定してください。');
       return false;
     }
     
     return Array.from(simulation.currentStates).some(stateId => 
-      automaton.states.find(s => s.id === stateId)?.isAccepting
+      states.find(s => s.id === stateId)?.isAccepting
     );
-  };
+  }, [states, simulation.currentStates]);
 
-  const getSimulationStatus = () => {
-    if (!simulation.isRunning) return null;
-    if (simulation.step >= simulation.input.length) {
-      return isAccepting() 
-        ? 'String accepted!' 
-        : 'String rejected - ended in non-accepting state';
-    }
-    return `Current symbol: ${simulation.input[simulation.step]}`;
-  };
+  // メモ化された現在の状態名リスト
+  const currentStateNames = useMemo(() => {
+    return Array.from(simulation.currentStates)
+      .map(id => states.find(s => s.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+  }, [simulation.currentStates, states]);
 
   return (
     <div className="space-y-4">
@@ -138,12 +146,7 @@ export function Simulator() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">現在の状態:</span>
               <span className="text-sm bg-accent px-2 py-1 rounded">
-                {simulation.currentStates.size > 0 
-                  ? Array.from(simulation.currentStates).map(id => {
-                      const state = automaton.states.find(s => s.id === id);
-                      return state?.name;
-                    }).join(', ')
-                  : '非受理'}
+                {currentStateNames || '非受理'}
               </span>
             </div>
             
@@ -156,36 +159,32 @@ export function Simulator() {
               </div>
             )}
 
-            {/* 入力文字列の進行状況表示 */}
-            {simulation.input && (
-              <div className="flex items-center space-x-1 overflow-x-auto py-2">
-                {simulation.input.split('').map((char, i) => (
-                  <div
-                    key={i}
-                    className={`
-                      flex-shrink-0 w-8 h-8 flex items-center justify-center rounded
-                      ${i === simulation.step ? 'bg-primary text-primary-foreground' :
-                        i < simulation.step ? 'bg-muted text-muted-foreground' :
-                        'border border-border'
-                      }
-                      transition-all duration-200
-                    `}
-                  >
-                    {char}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center space-x-1 overflow-x-auto py-2">
+              {simulation.input.split('').map((char, i) => (
+                <div
+                  key={i}
+                  className={`
+                    flex-shrink-0 w-8 h-8 flex items-center justify-center rounded
+                    ${i === simulation.step ? 'bg-primary text-primary-foreground' :
+                      i < simulation.step ? 'bg-muted text-muted-foreground' :
+                      'border border-border'
+                    }
+                    transition-all duration-200
+                  `}
+                >
+                  {char}
+                </div>
+              ))}
+            </div>
 
-            {/* 結果表示 */}
             {(simulation.step >= simulation.input.length || simulation.currentStates.size === 0) && (
               <div className={`mt-2 p-3 rounded-lg ${
-                isAccepting() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
+                isAccepting ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
               }`}>
                 <div className={`flex items-center justify-center text-sm font-medium ${
-                  isAccepting() ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+                  isAccepting ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
                 }`}>
-                  {isAccepting() ? (
+                  {isAccepting ? (
                     <>✓ 入力文字列は受理されました</>
                   ) : (
                     <>✕ 入力文字列は受理されませんでした</>
