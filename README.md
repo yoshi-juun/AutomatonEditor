@@ -32,8 +32,8 @@
 
 1. リポジトリをクローン：
 ```bash
-git clone <repository-url>
-cd <repository-name>
+git clone https://github.com/yoshi-juun/AutomatonEditor.git
+cd AutomatonEditor
 ```
 
 2. Docker コンテナのビルドと起動：
