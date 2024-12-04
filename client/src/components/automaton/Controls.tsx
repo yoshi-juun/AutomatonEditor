@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useAutomatonStore } from "../../lib/automatonStore";
+import { MinimizationDialog } from "./MinimizationDialog";
 import { 
   Circle,
   ArrowRight,
@@ -15,6 +16,7 @@ import {
 export function Controls() {
   const { mode, isNFA, dispatch } = useAutomatonStore();
   const [regexInput, setRegexInput] = useState('');
+  const [showMinimizationDialog, setShowMinimizationDialog] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -165,7 +167,7 @@ export function Controls() {
               {!isNFA && (
                 <Button
                   variant="outline"
-                  onClick={() => dispatch({ type: 'MINIMIZE_DFA' })}
+                  onClick={() => setShowMinimizationDialog(true)}
                   className="w-full"
                 >
                   DFAを最小化
@@ -175,6 +177,11 @@ export function Controls() {
           </div>
         </div>
       </div>
+
+      <MinimizationDialog 
+        isOpen={showMinimizationDialog}
+        onClose={() => setShowMinimizationDialog(false)}
+      />
     </div>
   );
 }
