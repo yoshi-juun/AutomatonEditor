@@ -30,7 +30,7 @@ export interface AutomatonState {
   automaton: Automaton;
   selectedStateId: string | null;
   selectedTransitionId: string | null;
-  mode: 'state' | 'transition' | 'delete' | 'simulate' | 'drag';
+  mode: 'state' | 'transition' | 'delete' | 'accepting' | 'drag';
   simulation: {
     input: string;
     currentStates: Set<string>;

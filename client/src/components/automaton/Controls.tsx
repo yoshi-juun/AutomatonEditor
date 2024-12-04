@@ -58,10 +58,10 @@ export function Controls() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="simulate" id="simulate" />
-            <Label htmlFor="simulate" className="flex items-center space-x-1">
-              <Play className="h-4 w-4" />
-              <span>Simulate</span>
+            <RadioGroupItem value="accepting" id="accepting" />
+            <Label htmlFor="accepting" className="flex items-center space-x-1">
+              <Circle className="h-4 w-4" />
+              <span>終了状態</span>
             </Label>
           </div>
         </RadioGroup>
