@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAutomatonStore } from "../../lib/automatonStore";
 import { State } from '../../lib/automatonTypes';
 
@@ -89,6 +89,10 @@ export function MinimizationDialog({ isOpen, onClose }: { isOpen: boolean; onClo
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>DFA最小化プロセス</DialogTitle>
+          <DialogDescription>
+            DFAを最小化するプロセスを段階的に表示します。
+            各ステップで状態の分割が行われ、同値な状態がグループ化されます。
+          </DialogDescription>
         </DialogHeader>
         
         <div className="py-4 space-y-4">
