@@ -28,7 +28,7 @@
 - Docker
 - Docker Compose
 
-### 起動手順
+### 初回起動手順
 
 1. リポジトリをクローン：
 ```bash
@@ -44,6 +44,13 @@ docker-compose up --build
 3. アプリケーションへのアクセス：
 ブラウザで http://localhost:5001 を開いてください。
 
+### 終了手順
+`Control+C`で終了
+
+### ２回目以降起動手順
+```bash
+docker-compose up
+```
 ---
 
 ## ポート競合が発生した際の対処法
