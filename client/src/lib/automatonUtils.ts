@@ -12,7 +12,7 @@ export const calculateTransitionPath = (
   if (from.id === to.id) {
     // セルフループの描画をさらに大きく、横方向により広く
     const r = 25; // 状態の半径
-    const loopRX = 60; // 横方向のループ半径
+    const loopRX = 70; // 横方向のループ半径
     const loopRY = 45; // 縦方向のループ半径
     const offset = 80; // 上方向へのオフセット
     
