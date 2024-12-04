@@ -7,24 +7,25 @@ export const calculateTransitionPath = (
   to: State,
   controlPoint?: Point
 ): string => {
-  if (!from || !to) return '';  // 無効な状態の場合は空のパスを返す
+  if (!from || !to) return '';
 
   if (from.id === to.id) {
-    // Self-loop
-    const r = 20;
-    const cx = from.position.x;
-    const cy = from.position.y - 40;
-    return `M ${from.position.x} ${from.position.y}
-            C ${cx - r} ${cy},
-              ${cx + r} ${cy},
-              ${from.position.x} ${from.position.y}`;
+    // セルフループの描画
+    const r = 25; // 状態の半径
+    const loopR = 20; // ループの半径
+    const offset = 40; // 上方向へのオフセット
+    
+    return `M ${from.position.x} ${from.position.y - r}
+            C ${from.position.x - loopR} ${from.position.y - offset},
+              ${from.position.x + loopR} ${from.position.y - offset},
+              ${from.position.x} ${from.position.y - r}`;
   }
 
+  // 既存の通常の遷移線の描画コード
   const dx = to.position.x - from.position.x;
   const dy = to.position.y - from.position.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
   
-  // Adjust start and end points to account for state circle radius
   const radius = 25;
   const ratio = radius / distance;
   const startX = from.position.x + dx * ratio;
@@ -37,7 +38,6 @@ export const calculateTransitionPath = (
             Q ${controlPoint.x} ${controlPoint.y} ${endX} ${endY}`;
   }
 
-  // Calculate control point for curved line
   const midX = (startX + endX) / 2;
   const midY = (startY + endY) / 2;
   const perpX = -dy / distance * 50;
