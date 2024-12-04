@@ -5,35 +5,62 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Play, SkipForward, RotateCcw } from "lucide-react";
-import { AutomatonState } from '../../lib/automatonTypes';
-
-// Stable selector with proper typing
-const selector = (state: AutomatonState & { dispatch: (action: any) => void }) => ({
-  automaton: state.automaton,
-  simulation: state.simulation,
-  dispatch: state.dispatch
-});
 
 export function Simulator() {
   const [inputString, setInputString] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Use memoized store values with stable reference
-  const storeValues = useAutomatonStore(selector);
-  const { automaton, simulation, dispatch } = storeValues;
+  // 必要な状態のみを選択する最適化されたセレクター
+  const {
+    states,
+    alphabet,
+    currentStates,
+    step,
+    input,
+    isRunning,
+    dispatch
+  } = useAutomatonStore(state => ({
+    states: state.automaton.states,
+    alphabet: state.automaton.alphabet,
+    currentStates: state.simulation.currentStates,
+    step: state.simulation.step,
+    input: state.simulation.input,
+    isRunning: state.simulation.isRunning,
+    dispatch: state.dispatch
+  }));
 
-  // Memoize validation function
-  const validateInput = useMemo(() => {
-    if (!automaton.alphabet.size) return () => false;
-    const validSymbols = Array.from(automaton.alphabet)
+  // シミュレーション状態の計算を最適化
+  const simulationState = useMemo(() => {
+    const hasAcceptingState = states.some(state => state.isAccepting);
+    const accepting = Array.from(currentStates)
+      .some(stateId => states.find(state => state.id === stateId)?.isAccepting);
+    const currentStateNames = Array.from(currentStates)
+      .map(id => states.find(state => state.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+
+    if (!hasAcceptingState && isRunning) {
+      setError('受理状態が設定されていません。状態を右クリックして受理状態を設定してください。');
+    }
+
+    return {
+      isAccepting: accepting,
+      currentStates: currentStateNames,
+      hasAcceptingState
+    };
+  }, [currentStates, states, isRunning]);
+
+  // 入力検証を最適化
+  const validateInput = useCallback((input: string) => {
+    if (!alphabet.size) return false;
+    const validSymbols = Array.from(alphabet)
       .flatMap(s => s.split(',').map(i => i.trim()));
-    return (input: string) => input.split('').every(char => validSymbols.includes(char));
-  }, [automaton.alphabet]);
+    return input.split('').every(char => validSymbols.includes(char));
+  }, [alphabet]);
 
-  // Memoized handlers with stable references
+  // イベントハンドラーを最適化
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputString(newValue);
+    setInputString(e.target.value);
     setError(null);
   }, []);
 
@@ -43,18 +70,15 @@ export function Simulator() {
       return;
     }
 
-    const inputSymbols = inputString.split('').filter(char => char !== ' ');
-    const validSymbols = Array.from(automaton.alphabet)
-      .flatMap(s => s.split(',').map(i => i.trim()));
-    
-    const invalidSymbols = inputSymbols.filter(symbol => !validSymbols.includes(symbol));
-    if (invalidSymbols.length > 0) {
-      setError(`以下の入力記号は使用できません：${invalidSymbols.join(', ')}\n使用可能な記号：${validSymbols.join(', ')}`);
+    if (!validateInput(inputString)) {
+      const validSymbols = Array.from(alphabet)
+        .flatMap(s => s.split(',').map(i => i.trim()));
+      setError(`使用可能な記号：${validSymbols.join(', ')}`);
       return;
     }
 
     dispatch({ type: 'START_SIMULATION', payload: inputString });
-  }, [inputString, automaton.alphabet, dispatch]);
+  }, [inputString, validateInput, alphabet, dispatch]);
 
   const handleStep = useCallback(() => {
     dispatch({ type: 'STEP_SIMULATION' });
@@ -66,42 +90,17 @@ export function Simulator() {
     setError(null);
   }, [dispatch]);
 
-  // Memoize simulation state calculations with stable reference
-  const simulationState = useMemo(() => {
-    if (!simulation.isRunning) {
-      return {
-        isAccepting: false,
-        currentStates: '',
-        hasAcceptingState: false
-      };
-    }
-
-    const hasAcceptingState = automaton.states.some(state => state.isAccepting);
-    const accepting = Array.from(simulation.currentStates)
-      .some(stateId => automaton.states.find(state => state.id === stateId)?.isAccepting);
-    const states = Array.from(simulation.currentStates)
-      .map(id => automaton.states.find(state => state.id === id)?.name)
-      .filter(Boolean)
-      .join(', ');
-
-    return {
-      isAccepting: accepting,
-      currentStates: states,
-      hasAcceptingState
-    };
-  }, [simulation.isRunning, simulation.currentStates, automaton.states]);
-
-  // Memoize input display with stable reference
+  // 入力表示を最適化
   const inputDisplay = useMemo(() => {
-    if (!simulation.input) return null;
+    if (!input) return null;
 
-    return simulation.input.split('').map((char: string, index: number) => (
+    return input.split('').map((char, index) => (
       <div
         key={index}
         className={`
           flex-shrink-0 w-8 h-8 flex items-center justify-center rounded
-          ${index === simulation.step ? 'bg-primary text-primary-foreground' :
-            index < simulation.step ? 'bg-muted text-muted-foreground' :
+          ${index === step ? 'bg-primary text-primary-foreground' :
+            index < step ? 'bg-muted text-muted-foreground' :
             'border border-border'
           }
           transition-all duration-200
@@ -110,14 +109,7 @@ export function Simulator() {
         {char}
       </div>
     ));
-  }, [simulation.input, simulation.step]);
-
-  // Move accepting state check outside of render cycle
-  useMemo(() => {
-    if (simulation.isRunning && !simulationState.hasAcceptingState) {
-      setError('受理状態が設定されていません。状態を右クリックして受理状態を設定してください。');
-    }
-  }, [simulation.isRunning, simulationState.hasAcceptingState]);
+  }, [input, step]);
 
   return (
     <div className="space-y-4">
@@ -129,7 +121,7 @@ export function Simulator() {
             value={inputString}
             onChange={handleInputChange}
             placeholder="Enter input string..."
-            disabled={simulation.isRunning}
+            disabled={isRunning}
           />
         </div>
       </div>
@@ -144,7 +136,7 @@ export function Simulator() {
       )}
 
       <div className="flex space-x-2">
-        {!simulation.isRunning ? (
+        {!isRunning ? (
           <Button 
             onClick={handleStart}
             className="w-full"
@@ -157,7 +149,7 @@ export function Simulator() {
             <Button
               variant="secondary"
               onClick={handleStep}
-              disabled={simulation.step >= simulation.input.length}
+              disabled={step >= input.length}
               className="flex-1"
             >
               <SkipForward className="h-4 w-4 mr-2" />
@@ -175,10 +167,10 @@ export function Simulator() {
         )}
       </div>
 
-      {simulation.isRunning && (
+      {isRunning && (
         <div className="space-y-2">
           <div className="text-sm font-medium">
-            Step: {simulation.step} / {simulation.input.length}
+            Step: {step} / {input.length}
           </div>
           <div className="space-y-2 p-4 border rounded-lg bg-card">
             <div className="flex items-center justify-between">
@@ -188,22 +180,22 @@ export function Simulator() {
               </span>
             </div>
             
-            {simulation.step < simulation.input.length && (
+            {step < input.length && (
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">入力記号:</span>
                 <span className="text-sm font-mono bg-accent px-2 py-1 rounded">
-                  {simulation.input[simulation.step]}
+                  {input[step]}
                 </span>
               </div>
             )}
 
-            {simulation.input && (
+            {input && (
               <div className="flex items-center space-x-1 overflow-x-auto py-2">
                 {inputDisplay}
               </div>
             )}
 
-            {(simulation.step >= simulation.input.length || simulation.currentStates.size === 0) && (
+            {(step >= input.length || currentStates.size === 0) && (
               <div className={`mt-2 p-3 rounded-lg ${
                 simulationState.isAccepting ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
               }`}>
