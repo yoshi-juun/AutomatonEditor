@@ -39,13 +39,45 @@ export const useAutomatonStore = create<
     switch (action.type) {
       case 'ADD_STATE':
         set((state: AutomatonState) => {
+          // グリッドベースのレイアウト計算
+          const gridSize = 150; // グリッド間隔
+          const statesCount = state.automaton.states.length;
+          const columns = 3; // 1行あたりの状態数
+          
+          // 既存の状態の位置を取得
+          const usedPositions = new Set(
+            state.automaton.states.map(s => `${s.position.x},${s.position.y}`)
+          );
+          
+          // 新しい位置を計算
+          let newPosition = action.payload;
+          if (!action.payload) {
+            const row = Math.floor(statesCount / columns);
+            const col = statesCount % columns;
+            
+            newPosition = {
+              x: 100 + col * gridSize,
+              y: 100 + row * gridSize
+            };
+            
+            // 位置が重複する場合、空いている位置を探す
+            while (usedPositions.has(`${newPosition.x},${newPosition.y}`)) {
+              newPosition.x += gridSize;
+              if (newPosition.x > 100 + (columns - 1) * gridSize) {
+                newPosition.x = 100;
+                newPosition.y += gridSize;
+              }
+            }
+          }
+
           const newState: State = {
             id: generateId(),
-            name: `q${state.automaton.states.length}`,
-            position: action.payload,
-            isInitial: state.automaton.states.length === 0,
+            name: `q${statesCount}`,
+            position: newPosition,
+            isInitial: statesCount === 0,
             isAccepting: false
           };
+
           return {
             ...state,
             automaton: {
