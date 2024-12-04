@@ -10,11 +10,11 @@ export const calculateTransitionPath = (
   if (!from || !to) return '';
 
   if (from.id === to.id) {
-    // セルフループの描画を改善
+    // セルフループの描画をさらに大きく
     const r = 25; // 状態の半径
-    const loopR = 35; // ループの半径を大きく
-    const offset = 60; // 上方向へのオフセットを大きく
-    const controlOffset = 40; // 制御点のオフセット
+    const loopR = 45; // ループの半径をさらに大きく
+    const offset = 80; // 上方向へのオフセットをさらに大きく
+    const controlOffset = 50; // 制御点のオフセット
     
     return `M ${from.position.x} ${from.position.y - r}
             C ${from.position.x - loopR} ${from.position.y - offset},
