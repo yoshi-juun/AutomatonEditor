@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { useAutomatonStore } from "../../lib/automatonStore";
 import { MinimizationDialog } from "./MinimizationDialog";
@@ -22,8 +23,9 @@ export function Controls() {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <ScrollArea className="h-[calc(100vh-2rem)] pr-4">
+      <div className="space-y-6">
+        <div className="space-y-2">
         <h2 className="text-lg font-semibold">Mode</h2>
         <RadioGroup
           value={mode}
@@ -235,5 +237,6 @@ export function Controls() {
         onClose={() => setShowHelpDialog(false)}
       />
     </div>
+    </ScrollArea>
   );
 }
